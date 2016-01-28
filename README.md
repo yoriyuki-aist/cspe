@@ -105,13 +105,7 @@ val auction =
 
 ### Formal Semantics
 
-See the paper
-
-## Implementation
-
-To enhance the performance and memory usage, CSP_E aggressively caches the results.  All builder method caches created objects, so structurally same objects are made physically equal.  In addition, every time a monitor accepts an event, it returns a new monitor.  This could cause large memory usage.  But each monitor caches results which is caused by accepting events, so the memory usage as well as computation time is reduced.  
-
-Current implementation of CSP_E uses ScalaCache, together with Google Guava for cache.
+See the forthcoming paper
 
 ## Gotcha
 

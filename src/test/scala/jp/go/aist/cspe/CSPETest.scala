@@ -3,9 +3,10 @@
  * All rights reserved.
  */
 
-import jp.go.aist.cspe._
 import jp.go.aist.cspe.CSPE._
-import scala.collection.immutable.{HashBag=>Bag}
+import jp.go.aist.cspe._
+
+import scala.collection.immutable.{HashBag => Bag}
 import scala.collection.mutable
 
 object CSPETest {

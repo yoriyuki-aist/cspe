@@ -1,9 +1,9 @@
 packAutoSettings
 
 lazy val commonSettings = Seq(
-  organization := "jp.go.aist.cspe",
-  version := "0.2.0",
-  scalaVersion := "2.11.5"
+  organization := "jp.go.aist.stracematch",
+  version := "0.3.0",
+  scalaVersion := "2.11.7"
 )
 
 lazy val root = (project in file(".")).
@@ -13,9 +13,8 @@ lazy val root = (project in file(".")).
     resolvers ++= Seq(
       "LocalRepo" at "file://" + file(Path.userHome.absolutePath + "/.ivy2/local").getAbsolutePath
     ),
-    libraryDependencies ++= Seq("com.github.cb372" %% "scalacache-guava" % "0.5.2", 
+    libraryDependencies ++= Seq(
     "io.github.nicolasstucki" %% "multisets" % "0.2",
-    "io.spray" %%  "spray-json" % "1.3.2",
     "jp.go.aist.cspe" %% "csp_e" % "0.2.0"
     )
   )

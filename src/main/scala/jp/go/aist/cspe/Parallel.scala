@@ -4,9 +4,9 @@
  */
 
 package jp.go.aist.cspe
-import scala.collection
-import scala.collection.immutable.{HashBag=>Bag}
 import jp.go.aist.cspe.CSPE._
+
+import scala.collection.immutable.{HashBag => Bag}
 
 
 private[cspe] class Parallel(processes0 : Bag[Process], as0 : Set[Symbol]) extends Process {

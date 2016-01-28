@@ -4,12 +4,11 @@
  */
 
 
-import jp.go.aist.stracematch.FdData
-import spray.json._
-import jp.go.aist.cspe._
 import jp.go.aist.cspe.CSPE._
-import scala.concurrent.duration.FiniteDuration
-import scala.io.{StdIn, Source}
+import jp.go.aist.cspe._
+import jp.go.aist.stracematch._
+
+import scala.io.StdIn
 
 object StraceMatch {
 

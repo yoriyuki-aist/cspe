@@ -7,10 +7,6 @@
 package jp.go.aist.cspe
 import jp.go.aist.cspe.CSPE._
 
-import scalacache._
-import guava._
-import memoization._
-
 private[cspe] class Rec1[X] (f0 : (X =>Process) => (X => Process), args0 : X, id0 : Int) extends Process {
   private val f = f0
   private val args = args0

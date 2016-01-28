@@ -4,12 +4,7 @@
  */
 
 package jp.go.aist.cspe
-import scala.collection
-import scala.collection.immutable.Stream.Empty
-import scala.collection.immutable.{HashBag=>Bag}
-import scalacache._
-import guava._
-import memoization._
+import scala.collection.immutable.{HashBag => Bag}
 
 object CSPE {
   implicit val config = Bag.configuration.compact[Process]

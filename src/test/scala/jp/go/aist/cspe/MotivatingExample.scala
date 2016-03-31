@@ -7,6 +7,7 @@
 
 package jp.go.aist.cspe
 import jp.go.aist.cspe._
+import jp.go.aist.cspe.CSPE._
 import jp.go.aist.cspe.TraceFactory._
 /**
   * Created by yoriyuki on 2016/03/30.
@@ -21,30 +22,50 @@ object MotivatingExample {
   }
 
   var max_pid = 0
+  var max_fd = 2
 
   def process(pid : Int, openFiles : Set[Int]) : Stream[AbsEvent] =
     genEventStream(pid, openFiles) ++ Event('Exit, pid) #:: skip
 
   def genEventStream(pid : Int, openFiles : Set[Int]) : Stream[AbsEvent] =
-    choice(
+    TraceFactory.choice {
       Array(
-        Event('Access, pid, random(openFiles)) #:: genEventStream(pid, openFiles),
-        {
-          val fd = 1 + openFiles.max
+        Event('Access, pid, random(openFiles)) #:: genEventStream(pid, openFiles), {
+          val fd = 1 + max_fd
+          max_fd += 1
           Event('Open, pid, fd) #:: genEventStream(pid, openFiles + fd) ++
             Event('Close, pid, fd) #:: genEventStream(pid, openFiles)
-        },
-        {
-          val child_pid = 1 + max_pid
-          max_pid += 1
-          Event('Spawn, pid, child_pid) #::
-            interleving(genEventStream(pid, openFiles), process(child_pid, openFiles))
         }
       ) ++
-        (if (pid == 0) Array.empty[Stream[AbsEvent]] else Array(skip))
-    )
+        (if (pid == 0) Array.empty[Stream[AbsEvent]] else Array(skip)) ++
+      (if (max_pid <= 1000) Array({
+        val child_pid = 1 + max_pid
+        max_pid += 1
+        Event('Spawn, pid, child_pid) #::
+          interleving(genEventStream(pid, openFiles), process(child_pid, openFiles))
+      })
+        else Array.empty[Stream[AbsEvent]])
+    }
+
+  def monitor(pid : Int, openFiles : Set[Int]) : Process = ?? {
+    case Event('Access, `pid`, fd : Int) if openFiles(fd) =>
+      monitor(pid, openFiles)
+    case Event('Open, `pid`, fd : Int) if !openFiles(fd) =>
+      monitor(pid, openFiles + fd) $ Event('Close, pid, fd) ->: monitor(pid, openFiles)
+    case Event('Spawn, `pid`, child_pid : Int) =>
+      monitor(pid, openFiles) ||| monitor(child_pid, openFiles)
+    case Event('Exit, `pid`) if pid != 0 => SKIP
+  } <+> SKIP
 
   def main(args: Array[String]) {
-    print(process(0, Set(0, 1, 2)) take 1000 foreach println)
-  }
+    var monitors = new ProcessSet(Set(monitor(0, Set(0, 1, 2))))
+//    monitors = monitors << Event('Open, 0, 4) << Event('Close, 0, 4)
+    val start = System.nanoTime()
+    for(e <- process(0, Set(0, 1, 2)).take(3000)) {
+      monitors = monitors << e
+    }
+    val stop = System.nanoTime()
+    println(monitors)
+    println("Elapsed: " + (stop - start) / scala.math.pow(10, 9) + "s")
+   }
 }

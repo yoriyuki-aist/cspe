@@ -35,33 +35,39 @@ object MotivatingExample {
           max_fd += 1
           Event('Open, pid, fd) #:: genEventStream(pid, openFiles + fd) ++
             Event('Close, pid, fd) #:: genEventStream(pid, openFiles)
-        }
-      ) ++
-        (if (pid == 0) Array.empty[Stream[AbsEvent]] else Array(skip)) ++
-      (if (max_pid <= 1000) Array({
+        },
+        {
         val child_pid = 1 + max_pid
         max_pid += 1
         Event('Spawn, pid, child_pid) #::
           interleving(genEventStream(pid, openFiles), process(child_pid, openFiles))
-      })
-        else Array.empty[Stream[AbsEvent]])
+      }) ++
+        (if (pid == 0) Array.empty[Stream[AbsEvent]] else Array(skip))
     }
 
-  def monitor(pid : Int, openFiles : Set[Int]) : Process = ?? {
+  def childProcess(pid : Int, openFiles : Set[Int]) : Process =
+    run(pid, openFiles) $ Event('Exit, `pid`) ->: SKIP
+
+  def run(pid : Int, openFiles : Set[Int]) : Process = ?? {
     case Event('Access, `pid`, fd : Int) if openFiles(fd) =>
-      monitor(pid, openFiles)
+      run(pid, openFiles)
     case Event('Open, `pid`, fd : Int) if !openFiles(fd) =>
-      monitor(pid, openFiles + fd) $ Event('Close, pid, fd) ->: monitor(pid, openFiles)
+      run(pid, openFiles + fd) $ Event('Close, pid, fd) ->: run(pid, openFiles)
     case Event('Spawn, `pid`, child_pid : Int) =>
-      monitor(pid, openFiles) ||| monitor(child_pid, openFiles)
-    case Event('Exit, `pid`) if pid != 0 => SKIP
+      run(pid, openFiles) ||| childProcess(child_pid, openFiles)
   } <+> SKIP
 
   def main(args: Array[String]) {
-    var monitors = new ProcessSet(Set(monitor(0, Set(0, 1, 2))))
-//    monitors = monitors << Event('Open, 0, 4) << Event('Close, 0, 4)
+    var monitors = new ProcessSet(Set(run(0, Set(0, 1, 2))))
+
+    //for debug
+    println(monitors << Event('Access, 0, 4))
+    println(monitors << Event('Open, 0, 4) << Event('Spawn, 0, 1) << Event('Close, 1, 4))
+    println(monitors << Event('Exit, 1))
+    println(monitors << Event('Spawn, 0, 1) << Event('Open, 1, 4) << Event('Exit, 1))
+
     val start = System.nanoTime()
-    for(e <- process(0, Set(0, 1, 2)).take(3000)) {
+    for(e <- process(0, Set(0, 1, 2)).take(1000)) {
       monitors = monitors << e
     }
     val stop = System.nanoTime()

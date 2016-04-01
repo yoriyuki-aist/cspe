@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2014-2016. National Institute of Advanced Industrial Science and Technology (AIST)
- * All rights reserved.
+ *
+ *  * Copyright (c) 2016. National Institute of Advanced Industrial Science and Technology (AIST)
+ *  * All rights reserved.
+ *
  */
 
 package jp.go.aist.cspe
@@ -36,10 +38,10 @@ object CSPE {
     new ParamPrefixRelaxed(f, objId) /// Relaxed semantics
   }
 
-  def choice(ps: Set[Process]): Process =
+  def choice(ps: List[Process]): Process =
     new Choice(ps)
 
-  def parallel(ps: Bag[Process], as: Set[Symbol]): Process = {
+  def parallel(ps: List[Process], as: Set[Symbol]): Process = {
      if (ps isEmpty) SKIP else {
         if (ps contains Failure) Failure else new Parallel(ps, as)
     }
@@ -47,13 +49,13 @@ object CSPE {
 
   def ||(as : Set[Symbol], f : (AbsEvent => Process)) :Process =
     ?? {
-      case e => parallel(Bag(choice(f(e) << e processes), choice(||(as, f) << e processes)), as)
+      case e => parallel(List(choice(f(e) << e processes), choice(||(as, f) << e processes)), as)
     }
 
 
   def |||(f : (AbsEvent => Process)) :Process =
     ?? {
-      case e => parallel(Bag(choice(f(e) << e processes), choice(|||(f) << e processes)), Set.empty)
+      case e => parallel(List(choice(f(e) << e processes), choice(|||(f) << e processes)), Set.empty)
     }
 
 
@@ -64,13 +66,13 @@ object CSPE {
 
 
   def sequence(ps: List[Process]): Process =
-    new Sequence(ps)
+    if (ps.isEmpty) SKIP else new Sequence(ps)
 
 
   def interrupt(p: Process, es: Set[Symbol], q: Process): Process =
     new Interrupt(p, es, q)
 
   
-  def processSet(ps : Set[Process]) : ProcessSet = new ProcessSet(ps)
+  def processSet(ps : List[Process]) : ProcessSet = new ProcessSet(ps)
 
 }

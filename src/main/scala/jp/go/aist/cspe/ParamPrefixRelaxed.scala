@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2014-2016. National Institute of Advanced Industrial Science and Technology (AIST)
- * All rights reserved.
+ *
+ *  * Copyright (c) 2016. National Institute of Advanced Industrial Science and Technology (AIST)
+ *  * All rights reserved.
+ *
  */
 
 package jp.go.aist.cspe
@@ -10,7 +12,7 @@ private[cspe] class ParamPrefixRelaxed(f0: PartialFunction[AbsEvent, Process], i
   val id = id0
   private val f = f0
   override def acceptPrim(e: AbsEvent): ProcessSet =
-    processSet(Set(if (f.isDefinedAt(e)) f(e) else this)) // note 'this' instead of 'Failure'
+    processSet(List(if (f.isDefinedAt(e)) f(e) else this)) // note 'this' instead of 'Failure'
 
   override def canTerminate = false
 

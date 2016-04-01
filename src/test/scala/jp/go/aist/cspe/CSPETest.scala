@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2014-2016. National Institute of Advanced Industrial Science and Technology (AIST)
- * All rights reserved.
+ *
+ *  * Copyright (c) 2016. National Institute of Advanced Industrial Science and Technology (AIST)
+ *  * All rights reserved.
+ *
  */
 
 import jp.go.aist.cspe.CSPE._
@@ -111,12 +113,12 @@ object CSPETest {
     val seq = Event('a) ->: SKIP $ Event('b) ->: SKIP
 
     val seq_ret = seq << Event('a) << Event('b)
-    assert(seq_ret == processSet(Set(SKIP)))
+    assert(seq_ret == processSet(List(SKIP)))
 
     val inter = (Event('a) ->: Event('b) ->: Event('c) ->: SKIP) | Set('b) |> (Event('d) ->: SKIP)
 
     val inter_result = inter << Event('a) << Event('b) << Event('d)
-    assert(inter_result == processSet(Set(SKIP)))
+    assert(inter_result == processSet(List(SKIP)))
 
     val inter_result2 = inter << Event('a) << Event('b) << Event('c)
     assert(inter_result2.isFailure)

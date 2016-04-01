@@ -58,7 +58,7 @@ object MotivatingExample {
   } <+> SKIP
 
   def main(args: Array[String]) {
-    var monitors = new ProcessSet(Set(run(0, Set(0, 1, 2))))
+    var monitors = new ProcessSet(List(run(0, Set(0, 1, 2))))
 
     //for debug
     println(monitors << Event('Access, 0, 4))
@@ -67,7 +67,7 @@ object MotivatingExample {
     println(monitors << Event('Spawn, 0, 1) << Event('Open, 1, 4) << Event('Exit, 1))
 
     val start = System.nanoTime()
-    for(e <- process(0, Set(0, 1, 2)).take(1000)) {
+    for(e <- process(0, Set(0, 1, 2)).take(10000)) {
       monitors = monitors << e
     }
     val stop = System.nanoTime()

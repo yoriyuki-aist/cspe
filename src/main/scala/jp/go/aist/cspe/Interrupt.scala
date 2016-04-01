@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2014-2016. National Institute of Advanced Industrial Science and Technology (AIST)
- * All rights reserved.
+ *
+ *  * Copyright (c) 2016. National Institute of Advanced Industrial Science and Technology (AIST)
+ *  * All rights reserved.
+ *
  */
 
 package jp.go.aist.cspe
@@ -15,9 +17,9 @@ private[cspe] class Interrupt(p0 : Process, as0 : Set[Symbol], q0 : Process) ext
     val next = p << e
     if (as contains e.alphabet) {
       if (next.processes.isEmpty) {
-        processSet(Set.empty)
+        processSet(List.empty)
       } else {
-        processSet(Set(q))
+        processSet(List(q))
       }
     } else {
       processSet(next.processes map (interrupt(_, as, q)))

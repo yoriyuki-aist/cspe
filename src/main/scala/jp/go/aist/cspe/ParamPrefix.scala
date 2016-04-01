@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2014-2016. National Institute of Advanced Industrial Science and Technology (AIST)
- * All rights reserved.
+ *
+ *  * Copyright (c) 2016. National Institute of Advanced Industrial Science and Technology (AIST)
+ *  * All rights reserved.
+ *
  */
 
 package jp.go.aist.cspe
@@ -10,7 +12,7 @@ private[cspe] class ParamPrefix(f : PartialFunction[AbsEvent, Process], id0 : In
     // used for verification
     val id = id0
     override def acceptPrim(e: AbsEvent): ProcessSet =
-      if (f.isDefinedAt(e)) processSet(Set(f(e))) else processSet(Set.empty)
+      if (f.isDefinedAt(e)) processSet(List(f(e))) else processSet(List.empty)
 
     override def canTerminate = false
 

@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2014-2016. National Institute of Advanced Industrial Science and Technology (AIST)
- * All rights reserved.
+ *
+ *  * Copyright (c) 2016. National Institute of Advanced Industrial Science and Technology (AIST)
+ *  * All rights reserved.
+ *
  */
 
 package jp.go.aist.cspe
@@ -9,37 +11,42 @@ import jp.go.aist.cspe.CSPE._
 import scala.collection.immutable.{HashBag => Bag}
 
 
-private[cspe] class Parallel(processes0 : Bag[Process], as0 : Set[Symbol]) extends Process {
+private[cspe] class Parallel(processes0 : List[Process], as0 : Set[Symbol]) extends Process {
 
   private[cspe] val processes = processes0
 
   private[cspe] val as = as0
-  // FIXME : naive implementation
-  private def allCombination(b : Iterable[Set[Process]]) : Set[Bag[Process]] = {
-    if (b isEmpty) Set(Bag.empty) else {
+
+  private def allCombination(b : List[List[Process]]) : List[List[Process]] = {
+    if (b isEmpty) List(List.empty) else {
       val ps = b.head
       val rest = b.tail
-      ps flatMap (p => allCombination(rest) map (_ + p))
+      ps flatMap (p => allCombination(rest) map (p :: _))
     }
   }
 
-  private def collapseBag(s : Bag[Process]) : Bag[Process] = {
-    if (s contains Failure) Bag(Failure) else s
+  private def collapse(s : List[Process]) : List[Process] = {
+    if (s contains Failure) List(Failure) else s
+  }
+
+  private def triplePartitions[X] : List[X] => List[Tuple3[List[X], X ,List[X]]] = {
+    case Nil => Nil
+    case e :: y => (Nil, e, y) :: (triplePartitions(y) map (t => (e :: t._1, t._2, t._3)))
   }
 
   override def acceptPrim(e: AbsEvent): ProcessSet = {
-    implicit val config = Bag.configuration.compact[Process]
     if (as.contains(e.alphabet)) {
       val pnext = processes map (_.accept(e).processes)
-      val ps = allCombination(pnext) map collapseBag
+      val ps = allCombination(pnext) map collapse
       processSet(ps map (parallel(_, as)))
     } else {
-      val nextPs: Set[Process] =
-        processes flatMap { p: Process =>
-          val rest: Bag[Process] = processes - p
-          val nextp: Set[Process] = p.accept(e).processes
-          nextp map ((q: Process) => parallel(rest + q, as))
-        } toSet;
+      val nextPs: List[Process] =
+        triplePartitions(processes) flatMap (t =>
+            t._2.accept(e).processes map (next =>
+              if (next.isFailure) Failure else {
+                parallel(next :: t._1 ++ t._3, as)
+              }
+          ))
       processSet(nextPs)
     }
   }

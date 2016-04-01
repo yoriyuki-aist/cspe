@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2014-2016. National Institute of Advanced Industrial Science and Technology (AIST)
- * All rights reserved.
+ *
+ *  * Copyright (c) 2016. National Institute of Advanced Industrial Science and Technology (AIST)
+ *  * All rights reserved.
+ *
  */
 
 package jp.go.aist.cspe
@@ -19,12 +21,12 @@ abstract class Process {
   // used for creation
   def ->:(e: AbsEvent): Process = new Prefix(e, this)
 
-  def <+>(that: Process) = choice(Set(this, that))
+  def <+>(that: Process) = choice(List(this, that))
 
   def ||(sync: Set[Symbol]): PartialParallel
   = new PartialParallel(this, sync)
 
-  def |||(that: Process) = parallel(Bag(this, that), Set.empty)
+  def |||(that: Process) = parallel(List(this, that), Set.empty)
 
   def $(that: Process) = sequence(List(this, that))
 
@@ -41,9 +43,9 @@ abstract class Process {
   def <<(e: AbsEvent): ProcessSet = this.accept(e)
 
   //Accept Events
-  def |=(s: Traversable[AbsEvent]): Boolean = processSet(Set(this)) |= s
+  def |=(s: Traversable[AbsEvent]): Boolean = processSet(List(this)) |= s
 
-  def |~(s: Traversable[AbsEvent]): Boolean = processSet(Set(this)) |~ s
+  def |~(s: Traversable[AbsEvent]): Boolean = processSet(List(this)) |~ s
 
   def equals (other: Any) : Boolean
 

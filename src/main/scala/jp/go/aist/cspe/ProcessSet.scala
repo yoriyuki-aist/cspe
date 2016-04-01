@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2014-2016. National Institute of Advanced Industrial Science and Technology (AIST)
- * All rights reserved.
+ *
+ *  * Copyright (c) 2016. National Institute of Advanced Industrial Science and Technology (AIST)
+ *  * All rights reserved.
+ *
  */
 
 package jp.go.aist.cspe
@@ -13,11 +15,11 @@ package jp.go.aist.cspe
 
 import jp.go.aist.cspe.CSPE._
 
-class ProcessSet (ps: Set[Process]) {
-  val processes : Set[Process] = ps.filterNot (_.isFailure)
+class ProcessSet (ps: List[Process]) {
+  val processes : List[Process] = ps.filterNot (_.isFailure)
 
   def accept(e: AbsEvent): ProcessSet = {
-    val rs : Set[Process] = processes.flatMap(_.accept(e).processes)
+    val rs : List[Process] = processes.flatMap(_.accept(e).processes)
     processSet(rs)
   }
 

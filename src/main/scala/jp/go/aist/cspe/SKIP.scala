@@ -1,6 +1,8 @@
 /*
- * Copyright (c) 2014-2016. National Institute of Advanced Industrial Science and Technology (AIST)
- * All rights reserved.
+ *
+ *  * Copyright (c) 2016. National Institute of Advanced Industrial Science and Technology (AIST)
+ *  * All rights reserved.
+ *
  */
 
 package jp.go.aist.cspe
@@ -8,7 +10,7 @@ package jp.go.aist.cspe
 import jp.go.aist.cspe.CSPE._
 
 object SKIP extends Process {
-  override def acceptPrim(e : AbsEvent): ProcessSet = processSet(Set.empty)
+  override def acceptPrim(e : AbsEvent): ProcessSet = processSet(List.empty)
 
   override def canTerminate = true
 

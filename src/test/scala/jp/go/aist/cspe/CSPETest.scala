@@ -8,11 +8,9 @@
 import jp.go.aist.cspe.CSPE._
 import jp.go.aist.cspe._
 
-import scala.collection.immutable.{HashBag => Bag}
 import scala.collection.mutable
 
 object CSPETest {
-  implicit val config = Bag.configuration.compact[Process]
   def main(args: Array[String]) {
 
     val p = rec0 (x => Event('open, "a.txt") ->:

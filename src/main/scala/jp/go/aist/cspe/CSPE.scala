@@ -6,10 +6,8 @@
  */
 
 package jp.go.aist.cspe
-import scala.collection.immutable.{HashBag => Bag}
 
 object CSPE {
-  implicit val config = Bag.configuration.compact[Process]
 
   private var objId = 0
 

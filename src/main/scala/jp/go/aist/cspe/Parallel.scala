@@ -8,9 +8,6 @@
 package jp.go.aist.cspe
 import jp.go.aist.cspe.CSPE._
 
-import scala.collection.immutable.{HashBag => Bag}
-
-
 private[cspe] class Parallel(processes0 : List[Process], as0 : Set[Symbol]) extends Process {
 
   private[cspe] val processes = processes0

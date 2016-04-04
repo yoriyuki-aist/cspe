@@ -9,10 +9,7 @@ package jp.go.aist.cspe
 
 import jp.go.aist.cspe.CSPE._
 
-import scala.collection.immutable.{HashBag => Bag}
-
 abstract class Process {
-  implicit val config = Bag.configuration.compact[Process]
 
   def acceptPrim(e: AbsEvent): ProcessSet
 

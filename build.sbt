@@ -11,7 +11,4 @@ lazy val root = (project in file(".")).
     name := "csp_e",
     resolvers ++= Seq(
       "LocalRepo" at "file://" + file(Path.userHome.absolutePath + "/.ivy2/local").getAbsolutePath
-    ),
-    libraryDependencies ++= Seq(
-    "io.github.nicolasstucki" %% "multisets" % "0.2")
-  )
+    ))

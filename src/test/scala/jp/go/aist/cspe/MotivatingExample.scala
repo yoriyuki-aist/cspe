@@ -72,6 +72,8 @@ object MotivatingExample {
     }
     val stop = System.nanoTime()
     println(monitors)
-    println("Elapsed: " + (stop - start) / scala.math.pow(10, 9) + "s")
+    println("CSP_E Elapsed: " + (stop - start) / scala.math.pow(10, 9) + "s")
+
+
    }
 }

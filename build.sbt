@@ -1,8 +1,8 @@
 
 lazy val commonSettings = Seq(
   organization := "jp.go.aist.cspe",
-  version := "0.3.0",
-  scalaVersion := "2.11.7"
+  version := "0.4.0",
+  scalaVersion := "2.11.8"
 )
 
 lazy val root = (project in file(".")).

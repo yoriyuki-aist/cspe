@@ -66,14 +66,30 @@ object MotivatingExample {
     println(monitors << Event('Exit, 1))
     println(monitors << Event('Spawn, 0, 1) << Event('Open, 1, 4) << Event('Exit, 1))
 
+    val trace = process(0, Set(0, 1, 2)).take(10000)
+
     val start = System.nanoTime()
-    for(e <- process(0, Set(0, 1, 2)).take(10000)) {
+    for(e <- trace) {
       monitors = monitors << e
     }
     val stop = System.nanoTime()
     println(monitors)
     println("CSP_E Elapsed: " + (stop - start) / scala.math.pow(10, 9) + "s")
 
+    val qeaMonitor = new QeaMonitor()
+    val start_qea = System.nanoTime()
+    for(e <- trace) {
+      val verdict = e match {
+        case Event('Access, pid : Int, fd : Int) => qeaMonitor.step(QeaMonitor.ACCESS, pid, fd)
+        case Event('Open, pid : Int, fd : Int) => qeaMonitor.step(QeaMonitor.OPEN, pid, fd)
+        case Event('Close, pid : Int, fd : Int) => qeaMonitor.step(QeaMonitor.CLOSE, pid, fd)
+        case Event('Spawn, parent : Int, child : Int) => qeaMonitor.step(QeaMonitor.SPAWN, parent, child)
+        case Event('Exit, pid : Int) => qeaMonitor.step(QeaMonitor.EXIT, pid)
+      }
+      assert(verdict);
+    }
+    val stop_qea = System.nanoTime()
+    println("CSP_E Elapsed: " + (stop_qea - start_qea) / scala.math.pow(10, 9) + "s")
 
-   }
+  }
 }

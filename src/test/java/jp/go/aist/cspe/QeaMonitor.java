@@ -5,13 +5,16 @@
  *
  */
 
-/**
+package jp.go.aist.cspe;/**
  * Created by yoriyuki on 2016/04/04.
  */
 
 //For specifying the QEA
 import static qea.structure.impl.other.Quantification.EXISTS;
 import static qea.structure.impl.other.Quantification.FORALL;
+
+import qea.monitoring.impl.MonitorFactory;
+import qea.monitoring.intf.Monitor;
 import qea.structure.intf.QEA;
 import qea.creation.QEABuilder;
 import static qea.structure.intf.Guard.*;
@@ -24,24 +27,26 @@ import qea.monitoring.impl.translators.OfflineTranslator;
 import qea.monitoring.impl.translators.DefaultTranslator;
 import qea.structure.impl.other.Verdict;
 
-public class qeaMonitor {
-    int ACCESS = 1;
-    int OPEN = 2;
-    int CLOSE = 3;
-    int SPAWN = 4;
-    int EXIT = 5;
+public class QeaMonitor {
+    public static int ACCESS = 1;
+    public static int OPEN = 2;
+    public static int CLOSE = 3;
+    public static int SPAWN = 4;
+    public static int EXIT = 5;
 
-    int pid = -1;
-    int fd = -2;
+    public static int pid = -1;
+    public static int fd = -2;
 
-    int parent = 1;
-    int child = 2;
-    int current = 3;
-    int a = 4;
-    int b = 5;
+    public static int parent = 1;
+    public static int child = 2;
+    public static int current = 3;
+    public static int a = 4;
+    public static int b = 5;
 
-    private QEA FdMatingMonitor;
-    private QEA AccessMonitor;
+    private QEA fdMatchingQEA;
+    private QEA accessQEA;
+    private Monitor<QEA> fdMatchingMonitor;
+    private Monitor<QEA> accessMonitor;
 
     private void makeFdMatchingMonitor() {
 
@@ -58,7 +63,7 @@ public class qeaMonitor {
 
         q.addFinalStates(3, 4);
 
-        FdMatingMonitor = q.make();
+        fdMatchingQEA = q.make();
     }
 
     private void makeAccessMonitor() {
@@ -74,6 +79,23 @@ public class qeaMonitor {
         q.addFinalStates(2);
         q.setSkipStates(1, 2);
 
-        AccessMonitor = q.make();
+        accessQEA = q.make();
+    }
+
+    public QeaMonitor() {
+        fdMatchingMonitor = MonitorFactory.create(fdMatchingQEA);
+        accessMonitor = MonitorFactory.create(accessQEA);
+    }
+
+    public boolean step(int event, int arg){
+        Verdict v1 = fdMatchingMonitor.step(event, arg);
+        Verdict v2 = accessMonitor.step(event, arg);
+        return !((v1 == Verdict.FAILURE) && (v2 == Verdict.FAILURE));
+    }
+
+    public boolean step(int event, int arg1, int arg2){
+        Verdict v1 = fdMatchingMonitor.step(event, arg1, arg2);
+        Verdict v2 = accessMonitor.step(event, arg1, arg2);
+        return !((v1 == Verdict.FAILURE) || (v2 == Verdict.FAILURE));
     }
 }

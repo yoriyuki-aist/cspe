@@ -34,21 +34,18 @@ public class QeaMonitor {
     public static int SPAWN = 4;
     public static int EXIT = 5;
 
-    public static int pid = -1;
-    public static int fd = -2;
-
     public static int parent = 1;
     public static int child = 2;
     public static int current = 3;
     public static int a = 4;
     public static int b = 5;
 
-    private QEA fdMatchingQEA;
-    private QEA accessQEA;
-    private Monitor<QEA> fdMatchingMonitor;
-    private Monitor<QEA> accessMonitor;
+    private QEA qEA;
+    private Monitor<QEA> monitor;
 
-    private void makeFdMatchingMonitor() {
+    private void makeMonitor() {
+        int pid = -1;
+        int fd = -2;
 
         QEABuilder q = new QEABuilder("Fd Open-Close Matching");
 
@@ -56,46 +53,46 @@ public class QeaMonitor {
         q.addQuantification(EXISTS, pid);
         q.addQuantification(EXISTS, fd);
 
+        //1 : process not spawned
+        //2 : fd not yet opened
+        //3 : fd opened
+        //4 : error
         q.addTransition(1, SPAWN, new int[]{parent, pid}, 2);
-        q.addTransition(2, CLOSE, new int[]{pid, fd}, 3);
-        q.addTransition(2, OPEN, new int[]{pid, fd}, 4);
-        q.addTransition(4, EXIT, new int[]{pid}, 5);
+        q.addTransition(1, OPEN, new int[]{pid, fd}, varIsEqualToIntVal(pid, 0), 3);
+        q.addTransition(1, OPEN, new int[]{pid, fd}, not(varIsEqualToIntVal(pid, 0)), 4);
+        q.addTransition(1, ACCESS, new int[]{pid, fd}, 4);
+        q.addTransition(1, CLOSE, new int[]{pid, fd}, 4);
+        q.addTransition(1, EXIT, new int[]{pid}, 4);
 
-        q.addFinalStates(3, 4);
+        q.addTransition(2, OPEN, new int[]{pid, fd}, 3);
+        q.addTransition(2, EXIT, new int[]{pid}, 1);
+        q.addTransition(2, CLOSE, new int[]{pid, fd}, 4);
+        q.addTransition(2, SPAWN, new int[]{parent, pid}, 4);
+        q.addTransition(2, SPAWN, new int[]{pid, child}, 2);
 
-        fdMatchingQEA = q.make();
-    }
+        q.addTransition(3, OPEN, new int[]{pid, fd}, 4);
+        q.addTransition(3, CLOSE, new int[]{pid, fd}, 2);
+        q.addTransition(3, ACCESS, new int[]{pid, fd}, 3);
+        q.addTransition(3, SPAWN, new int[]{parent, pid}, 4);
+        q.addTransition(3, SPAWN, new int[]{pid, child}, 3);
+        q.addTransition(3, EXIT, new int[]{pid}, 4);
 
-    private void makeAccessMonitor() {
+        q.setSkipStates(4);
+        q.addFinalStates(4);
 
-        QEABuilder q = new QEABuilder("Access Monitor");
-
-        q.addQuantification(FORALL, fd);
-
-        q.addTransition(1, OPEN, new int[]{a, fd}, storeVar(current, a), 2);
-        q.addTransition(2, ACCESS, new int[]{a, fd}, isEqual(a, current), 2);
-        q.addTransition(2, SPAWN, new int[]{a, b}, isEqual(a, current), storeVar(current, b), 2);
-
-        q.addFinalStates(2);
-        q.setSkipStates(1, 2);
-
-        accessQEA = q.make();
+        qEA = q.make();
     }
 
     public QeaMonitor() {
-        fdMatchingMonitor = MonitorFactory.create(fdMatchingQEA);
-        accessMonitor = MonitorFactory.create(accessQEA);
+        makeMonitor();
+        monitor = MonitorFactory.create(qEA);
     }
 
-    public boolean step(int event, int arg){
-        Verdict v1 = fdMatchingMonitor.step(event, arg);
-        Verdict v2 = accessMonitor.step(event, arg);
-        return !((v1 == Verdict.FAILURE) && (v2 == Verdict.FAILURE));
+    public Verdict step(int event, int arg){
+        return monitor.step(event, arg);
     }
 
-    public boolean step(int event, int arg1, int arg2){
-        Verdict v1 = fdMatchingMonitor.step(event, arg1, arg2);
-        Verdict v2 = accessMonitor.step(event, arg1, arg2);
-        return !((v1 == Verdict.FAILURE) || (v2 == Verdict.FAILURE));
+    public Verdict step(int event, int arg1, int arg2) {
+        return monitor.step(event, arg1, arg2);
     }
 }

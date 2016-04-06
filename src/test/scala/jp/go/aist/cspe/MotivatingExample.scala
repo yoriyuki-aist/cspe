@@ -9,6 +9,7 @@ package jp.go.aist.cspe
 import jp.go.aist.cspe._
 import jp.go.aist.cspe.CSPE._
 import jp.go.aist.cspe.TraceFactory._
+import qea.structure.impl.other.Verdict
 /**
   * Created by yoriyuki on 2016/03/30.
   */
@@ -29,8 +30,10 @@ object MotivatingExample {
 
   def genEventStream(pid : Int, openFiles : Set[Int]) : Stream[AbsEvent] =
     TraceFactory.choice {
+      (if (openFiles.isEmpty) {Array.empty} else {
+        Array(Event('Access, pid, random(openFiles)) #:: genEventStream(pid, openFiles))}) ++
       Array(
-        Event('Access, pid, random(openFiles)) #:: genEventStream(pid, openFiles), {
+        {
           val fd = 1 + max_fd
           max_fd += 1
           Event('Open, pid, fd) #:: genEventStream(pid, openFiles + fd) ++
@@ -58,7 +61,7 @@ object MotivatingExample {
   } <+> SKIP
 
   def main(args: Array[String]) {
-    var monitors = new ProcessSet(List(run(0, Set(0, 1, 2))))
+    var monitors = new ProcessSet(List(run(0, Set.empty)))
 
     //for debug
     println(monitors << Event('Access, 0, 4))
@@ -66,15 +69,28 @@ object MotivatingExample {
     println(monitors << Event('Exit, 1))
     println(monitors << Event('Spawn, 0, 1) << Event('Open, 1, 4) << Event('Exit, 1))
 
-    val trace = process(0, Set(0, 1, 2)).take(10000)
+    // Should fail
+    println(new QeaMonitor() step (QeaMonitor.ACCESS, 0, 4) negated())
+    val q1 = new QeaMonitor()
+    q1.step (QeaMonitor.OPEN, 0, 4)
+    q1.step (QeaMonitor.SPAWN, 0, 1)
+    println(q1.step (QeaMonitor.CLOSE, 1, 4) negated())
+    val q2 = new QeaMonitor()
+    println(q2.step(QeaMonitor.EXIT, 1) negated())
+    val q3 = new QeaMonitor()
+    q3.step (QeaMonitor.SPAWN, 0, 1)
+    q3.step (QeaMonitor.OPEN, 1, 4)
+    println(q3.step(QeaMonitor.EXIT, 1) negated())
 
-    val start = System.nanoTime()
-    for(e <- trace) {
-      monitors = monitors << e
-    }
-    val stop = System.nanoTime()
-    println(monitors)
-    println("CSP_E Elapsed: " + (stop - start) / scala.math.pow(10, 9) + "s")
+    // Should success
+    val q4 = new QeaMonitor()
+    q4.step (QeaMonitor.SPAWN, 0, 1)
+    q4.step (QeaMonitor.OPEN, 1, 1)
+    q4.step (QeaMonitor.ACCESS, 1, 1)
+    q4.step (QeaMonitor.CLOSE, 1, 1)
+    println(q4.step(QeaMonitor.EXIT, 1) negated())
+
+    val trace = process(0, Set.empty).take(10000)
 
     val qeaMonitor = new QeaMonitor()
     val start_qea = System.nanoTime()
@@ -86,10 +102,20 @@ object MotivatingExample {
         case Event('Spawn, parent : Int, child : Int) => qeaMonitor.step(QeaMonitor.SPAWN, parent, child)
         case Event('Exit, pid : Int) => qeaMonitor.step(QeaMonitor.EXIT, pid)
       }
-      assert(verdict);
+      println(e + " : " + verdict.negated())
+      assert(!(verdict.negated() == Verdict.FAILURE))
     }
     val stop_qea = System.nanoTime()
-    println("CSP_E Elapsed: " + (stop_qea - start_qea) / scala.math.pow(10, 9) + "s")
+    println("QEA Elapsed: " + (stop_qea - start_qea) / scala.math.pow(10, 9) + "s")
+
+    val start = System.nanoTime()
+    for(e <- trace) {
+      monitors = monitors << e
+    }
+    val stop = System.nanoTime()
+    println(monitors)
+    println("CSP_E Elapsed: " + (stop - start) / scala.math.pow(10, 9) + "s")
+
 
   }
 }

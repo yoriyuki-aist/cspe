@@ -84,7 +84,7 @@ def auction(max : Int) : Process = ?? {
     }
 ```
 
-A monitor for Unix like processes and file descriptros.
+A monitor for Unix like processes and file descriptor.
 ```scala
 def childProcess(pid : Int, openFiles : Set[Int]) : Process =
   run(pid, openFiles) $ Event('Exit, `pid`) ->: SKIP

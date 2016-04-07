@@ -5,19 +5,17 @@ CSP_E is a log analyzing tool which is based on Hoare's CSP notation.  CSP_E as 
 
 CSP_E does not provides parsing facilities of a log.  Instead, CSP_E monitor (Process) accepts Event class as an element of an input stream.
 
-Supposed users of CSP_E are primary reseaercher and developper who are developping a new runtime monitoring framework.
-
 ## Classes and methods
 
 Everything is packed under jp.go.aist.cspe module.
 
 ### Event
 
-Event class is a case class which has a symbol as a first parameter, and arbitrary number of arguments of Any type.  Event class has the base class AbsEvent.  A monitor which is defined by CSP_E, will accepts AbsEvent and changes its state.
+Event class is a case class which has a symbol as a first parameter, and arbitrary number of arguments of Any type.  Event class has the base class AbsEvent.  A monitor which is defined by CSP_E, accepts AbsEvent and creates a new monitor which contains the next state.
 
 ### ProcessSet
 
-ProcessSet class represents a set of possible states (which are represented by CSP processes) of the monitor.  In general, there are multiple possibility of the next states of a monitor when it accepts a event.  Therefore, a monitor can have multiple states.  ProcessSet implements the methods which accepts events or event streams.
+ProcessSet class represents a set of monitors.  ProcessSet implements the methods which accepts events or event streams.
 
 Method | Action |
 -------|--------|
@@ -32,11 +30,11 @@ This singleton object represents a process which does nothing and terminates imm
 
 ### STOP
 
-This singleton object represents a process which is already terminated.
+This singleton object represents a deadlock.
 
 ### Failure
 
-Failure is a new construct to adapt CSP for event monitoring.  Failure represents a process which is already failed to accept a event.  Failure is used to show that an event never happens.
+Failure is a new construct to adapt CSP for event monitoring.  Failure represents a process which is already failed to accept a event.  Failure is used to show that the state which leads to Failure should not happens.
 
 ### CSPE
 
@@ -44,9 +42,6 @@ This is the Builder of monitors and ProcessSet.  CSPE is supposed to be used by 
 
 Method | Action
 -------|-------
-`rec0 (p => P(p))` | Create the fixed point of `P`
-`process` | Another name of `rec0`
-`rec1 (f => arg => P(f, arg))` | Fixed point operator with one parameter
 `? g p` | Guard
 `?? {case Event('...) ...}` | If it receive mathing event, execute the matching clause.  Otherwise, it fails.
 `??? {case Event('...) ...}` | If it receive mathing event, execute the matching clause.  Otherwise, it just waits.
@@ -54,7 +49,7 @@ Method | Action
 `parallel(Bag(p1, p2, ...), Set('a, 'b, ...))` | Parallel composition of `p1, p2,...` using `'a, 'b...` as synchronization events
 `sequence(p1 : p2 : ...)` | Sequential composition of `p1, p2, ...`
 `interrupt(p, Set('a, 'b,...), q)` | Interrupt process `p` when one of `'a, ...'` occurs and execute process `q`
-`processSet(Set(p1, p2, ...))` | Builder method for `processSet`
+`processSet(Set(p1, p2, ...))` | Builder method for `ProcessSet`
 
 ### Process
 
@@ -73,24 +68,40 @@ Method | Action
 
 The monitor which tests the open and close events are matched.
 ```scala
-val openCloseSimpl =
-  process (p =>
-    ?? {
-      case Event('open) =>
-        (p <+> SKIP) ||| ?? { case Event('close) => SKIP}
-      case Event('close) => Failure
-      case _ => p <+> SKIP
-    }
-  )
+def openCloseSimpl : Process = ?? {
+  case Event('open) =>
+     (openCloseSimpl <+> SKIP) ||| ?? { case Event('close) => SKIP}
+  case Event('close) => Failure
+  case _ => openCloseSimpl <+> SKIP
+}
 ```
 
 The monitor which check the auction bidding.
 
 ```scala
-val auction =
-   rec1 [Int]((a: Int => Process) => (max : Int) =>
-     ?? { case Event('bid, p : String) => ? (p.toInt > max) {a(p.toInt)}} : Process) _
+def auction(max : Int) : Process = ?? {
+      case Event('bid, p : Int) => ? (p > max) {auction(p)}
+    }
 ```
+
+A monitor for Unix like processes and file descriptros.
+```scala
+def childProcess(pid : Int, openFiles : Set[Int]) : Process =
+  run(pid, openFiles) $ Event('Exit, `pid`) ->: SKIP
+
+def run(pid : Int, openFiles : Set[Int]) : Process = ?? {
+  case Event('Access, `pid`, fd : Int) if openFiles(fd) =>
+    run(pid, openFiles)
+  case Event('Open, `pid`, fd : Int) if !openFiles(fd) =>
+    run(pid, openFiles + fd) $ Event('Close, pid, fd) ->: run(pid, openFiles)
+  case Event('Spawn, `pid`, child_pid : Int) =>
+    run(pid, openFiles) ||| childProcess(child_pid, openFiles)
+} <+> SKIP
+
+var monitors = new ProcessSet(List(run(0, Set.empty)))
+```
+
+The last monitor processes 10K events about 6 seconds on Mac Pro.
 
 ## Semantics
 

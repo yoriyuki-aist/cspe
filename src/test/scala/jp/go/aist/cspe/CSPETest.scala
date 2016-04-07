@@ -125,9 +125,8 @@ object CSPETest {
 //    val hide_result = hide << Event('a) << Event('c)
 //    assert(! hide_result.isFailure)
 
-    val auction0 =
-      rec1 [Int]((a: Int => Process) => (max : Int) =>
-        ?? { case Event('bid, p : String) => ? (p.toInt > max) {a(p.toInt)}} : Process) _
+    def auction0(max : Int) : Process =
+        ?? { case Event('bid, p : String) => ? (p.toInt > max) {auction0(p.toInt)}} : Process)
 
     val auction_ret = auction0(0) << Event('bid, "4") << Event('bid, "10") << Event('bid, "20")
     assert(!auction_ret.isFailure)

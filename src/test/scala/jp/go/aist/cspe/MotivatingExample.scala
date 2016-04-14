@@ -25,47 +25,48 @@ object MotivatingExample {
   var max_pid = 0
   var max_fd = 2
 
-  def process(pid : Int, openFiles : Set[Int]) : Stream[AbsEvent] =
-    genEventStream(pid, openFiles) ++ Event('Exit, pid) #:: skip
-
   def genEventStream(pid : Int, openFiles : Set[Int]) : Stream[AbsEvent] =
     TraceFactory.choice {
-      (if (openFiles.isEmpty) {Array.empty} else {
-        Array(Event('Access, pid, random(openFiles)) #:: genEventStream(pid, openFiles))}) ++
+      (if (openFiles.isEmpty) {if (pid == 0) Array.empty else Array(Event('Exit, pid) #:: skip)} else {
+        Array(Event('Access, pid, random(openFiles)) #:: genEventStream(pid, openFiles),
+          {
+            val fd = random(openFiles)
+            Event('Close, pid, fd) #:: genEventStream(pid, openFiles - fd)
+          }
+        )}) ++
       Array(
         {
           val fd = 1 + max_fd
           max_fd += 1
-          Event('Open, pid, fd) #:: genEventStream(pid, openFiles + fd) ++
-            Event('Close, pid, fd) #:: genEventStream(pid, openFiles)
+          Event('Open, pid, fd) #:: genEventStream(pid, openFiles + fd)
         },
         {
         val child_pid = 1 + max_pid
         max_pid += 1
         Event('Spawn, pid, child_pid) #::
-          interleving(genEventStream(pid, openFiles), process(child_pid, openFiles))
+          interleving(genEventStream(pid, openFiles), genEventStream(child_pid, openFiles))
       }) ++
         (if (pid == 0) Array.empty[Stream[AbsEvent]] else Array(skip))
     }
-
-  def childProcess(pid : Int, openFiles : Set[Int]) : Process =
-    run(pid, openFiles) $ Event('Exit, `pid`) ->: SKIP
 
   def run(pid : Int, openFiles : Set[Int]) : Process = ?? {
     case Event('Access, `pid`, fd : Int) if openFiles(fd) =>
       run(pid, openFiles)
     case Event('Open, `pid`, fd : Int) if !openFiles(fd) =>
-      run(pid, openFiles + fd) $ Event('Close, pid, fd) ->: run(pid, openFiles)
+      run(pid, openFiles + fd)
     case Event('Spawn, `pid`, child_pid : Int) =>
-      run(pid, openFiles) ||| childProcess(child_pid, openFiles)
-  } <+> SKIP
+      run(pid, openFiles) ||| run(child_pid, openFiles)
+    case Event('Close, `pid`, fd : Int) if openFiles(fd) =>
+      run(pid, openFiles - fd)
+    case Event('Exit, `pid`) if pid != 0 && openFiles.isEmpty => SKIP
+  }
 
   def main(args: Array[String]) {
     val monitors = new ProcessSet(List(run(0, Set.empty)))
 
     //for debug
     println(monitors << Event('Access, 0, 4))
-    println(monitors << Event('Open, 0, 4) << Event('Spawn, 0, 1) << Event('Close, 1, 4))
+    println(monitors << Event('Open, 0, 4) << Event('Spawn, 0, 1) << Event('Close, 0, 4) << Event('Exit, 1))
     println(monitors << Event('Exit, 1))
     println(monitors << Event('Spawn, 0, 1) << Event('Open, 1, 4) << Event('Exit, 1))
 
@@ -106,7 +107,7 @@ object MotivatingExample {
     q7.step (QeaMonitor.SPAWN, 0, 1)
     println(q7.step (QeaMonitor.ACCESS, 0, 2))
 
-    val max_trace = process(0, Set.empty).take(300000)
+    val max_trace = genEventStream(0, Set.empty).take(300000)
 
     for (i <- 1 to 30) {
       val trace = max_trace.take(i * 10000)

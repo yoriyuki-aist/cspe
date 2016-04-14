@@ -61,7 +61,7 @@ object MotivatingExample {
   } <+> SKIP
 
   def main(args: Array[String]) {
-    var monitors = new ProcessSet(List(run(0, Set.empty)))
+    val monitors = new ProcessSet(List(run(0, Set.empty)))
 
     //for debug
     println(monitors << Event('Access, 0, 4))
@@ -70,17 +70,17 @@ object MotivatingExample {
     println(monitors << Event('Spawn, 0, 1) << Event('Open, 1, 4) << Event('Exit, 1))
 
     // Should fail
-    println(new QeaMonitor() step (QeaMonitor.ACCESS, 0, 4) negated())
+    println(new QeaMonitor() step (QeaMonitor.ACCESS, 0, 4))
     val q1 = new QeaMonitor()
     q1.step (QeaMonitor.OPEN, 0, 4)
     q1.step (QeaMonitor.SPAWN, 0, 1)
-    println(q1.step (QeaMonitor.CLOSE, 1, 4) negated())
+    println(q1.step (QeaMonitor.CLOSE, 1, 4))
     val q2 = new QeaMonitor()
-    println(q2.step(QeaMonitor.EXIT, 1) negated())
+    println(q2.step(QeaMonitor.EXIT, 1))
     val q3 = new QeaMonitor()
     q3.step (QeaMonitor.SPAWN, 0, 1)
     q3.step (QeaMonitor.OPEN, 1, 4)
-    println(q3.step(QeaMonitor.EXIT, 1) negated())
+    println(q3.step(QeaMonitor.EXIT, 1))
 
     // Should success
     val q4 = new QeaMonitor()
@@ -88,34 +88,55 @@ object MotivatingExample {
     q4.step (QeaMonitor.OPEN, 1, 1)
     q4.step (QeaMonitor.ACCESS, 1, 1)
     q4.step (QeaMonitor.CLOSE, 1, 1)
-    println(q4.step(QeaMonitor.EXIT, 1) negated())
+    println(q4.step(QeaMonitor.EXIT, 1))
 
-    val trace = process(0, Set.empty).take(10000)
+    val q5 = new QeaMonitor()
+    q5.step (QeaMonitor.SPAWN, 0, 1)
+    q5.step (QeaMonitor.OPEN, 1, 1)
+    q5.step (QeaMonitor.CLOSE, 1, 1)
+    println(q5.step(QeaMonitor.EXIT, 1))
 
-    val qeaMonitor = new QeaMonitor()
-    val start_qea = System.nanoTime()
-    for(e <- trace) {
-      val verdict = e match {
-        case Event('Access, pid : Int, fd : Int) => qeaMonitor.step(QeaMonitor.ACCESS, pid, fd)
-        case Event('Open, pid : Int, fd : Int) => qeaMonitor.step(QeaMonitor.OPEN, pid, fd)
-        case Event('Close, pid : Int, fd : Int) => qeaMonitor.step(QeaMonitor.CLOSE, pid, fd)
-        case Event('Spawn, parent : Int, child : Int) => qeaMonitor.step(QeaMonitor.SPAWN, parent, child)
-        case Event('Exit, pid : Int) => qeaMonitor.step(QeaMonitor.EXIT, pid)
+    val q6 = new QeaMonitor()
+    q6.step (QeaMonitor.OPEN, 0, 1372)
+    q6.step (QeaMonitor.SPAWN, 0, 1371)
+    println(q6.step (QeaMonitor.ACCESS, 0, 1372))
+
+    val q7 = new QeaMonitor()
+    q7.step (QeaMonitor.OPEN, 0, 2)
+    q7.step (QeaMonitor.SPAWN, 0, 1)
+    println(q7.step (QeaMonitor.ACCESS, 0, 2))
+
+    val max_trace = process(0, Set.empty).take(300000)
+
+    for (i <- 1 to 30) {
+      val trace = max_trace.take(i * 10000)
+      println("Data : " + i * 10000)
+
+//      val qeaMonitor = new QeaMonitor()
+//      val start_qea = System.nanoTime()
+//      for (e <- trace) {
+//        val verdict = e match {
+//          case Event('Access, pid: Int, fd: Int) => qeaMonitor.step(QeaMonitor.ACCESS, pid, fd)
+//          case Event('Open, pid: Int, fd: Int) => qeaMonitor.step(QeaMonitor.OPEN, pid, fd)
+//          case Event('Close, pid: Int, fd: Int) => qeaMonitor.step(QeaMonitor.CLOSE, pid, fd)
+//          case Event('Spawn, parent: Int, child: Int) => qeaMonitor.step(QeaMonitor.SPAWN, parent, child)
+//          case Event('Exit, pid: Int) => qeaMonitor.step(QeaMonitor.EXIT, pid)
+//        }
+//        assert(verdict)
+//      }
+//      val stop_qea = System.nanoTime()
+//      println("QEA Elapsed: " + (stop_qea - start_qea) / scala.math.pow(10, 9) + "s")
+
+      val start = System.nanoTime()
+      var monitors = new ProcessSet(List(run(0, Set.empty)))
+      for (e <- trace) {
+        monitors = monitors << e
       }
-      println(e + " : " + verdict.negated())
-      assert(!(verdict.negated() == Verdict.FAILURE))
+      val stop = System.nanoTime()
+      assert(!monitors.isFailure)
+      //println(monitors)
+      println("CSP_E Elapsed: " + (stop - start) / scala.math.pow(10, 9) + "s")
     }
-    val stop_qea = System.nanoTime()
-    println("QEA Elapsed: " + (stop_qea - start_qea) / scala.math.pow(10, 9) + "s")
-
-    val start = System.nanoTime()
-    for(e <- trace) {
-      monitors = monitors << e
-    }
-    val stop = System.nanoTime()
-    println(monitors)
-    println("CSP_E Elapsed: " + (stop - start) / scala.math.pow(10, 9) + "s")
-
 
   }
 }

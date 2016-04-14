@@ -34,65 +34,117 @@ public class QeaMonitor {
     public static int SPAWN = 4;
     public static int EXIT = 5;
 
-    public static int parent = 1;
-    public static int child = 2;
-    public static int current = 3;
-    public static int a = 4;
-    public static int b = 5;
+    public static int pid = 1;
+    public static int parent = 2;
+    public static int child = 3;
+    public static int current = 4;
+    public static int a = 5;
+    public static int b = 6;
 
-    private QEA qEA;
-    private Monitor<QEA> monitor;
+    private QEA fdQEA;
+    private Monitor<QEA> fdMonitor;
 
-    private void makeMonitor() {
-        int pid = -1;
-        int fd = -2;
+    private QEA processQEA;
+    private Monitor<QEA> processMonitor;
+
+    private void makefdMonitor() {
+        int fd = -1;
 
         QEABuilder q = new QEABuilder("Fd Open-Close Matching");
 
         q.setNegated(true);
-        q.addQuantification(EXISTS, pid);
         q.addQuantification(EXISTS, fd);
 
-        //1 : process not spawned
+        //1 : process 0
         //2 : fd not yet opened
         //3 : fd opened
-        //4 : error
-        q.addTransition(1, SPAWN, new int[]{parent, pid}, 2);
-        q.addTransition(1, OPEN, new int[]{pid, fd}, varIsEqualToIntVal(pid, 0), 3);
-        q.addTransition(1, OPEN, new int[]{pid, fd}, not(varIsEqualToIntVal(pid, 0)), 4);
-        q.addTransition(1, ACCESS, new int[]{pid, fd}, 4);
-        q.addTransition(1, CLOSE, new int[]{pid, fd}, 4);
-        q.addTransition(1, EXIT, new int[]{pid}, 4);
+        //4 : in child process
+        //5 : error
+        q.addTransition(1, SPAWN, new int[]{parent, child}, varIsEqualToIntVal(parent, 0), storeVar(pid, child), 2);
+        q.addTransition(1, SPAWN, new int[]{parent, child}, varIsEqualToIntVal(parent, 0), 1);
+        q.addTransition(1, OPEN, new int[]{a, fd}, varIsEqualToIntVal(a, 0), storeVar(pid, a), 3);
+        q.addTransition(1, OPEN, new int[]{a, fd}, not(varIsEqualToIntVal(a, 0)), 1);
+        q.addTransition(1, ACCESS, new int[]{a, fd}, varIsEqualToIntVal(a, 0), 5);
+        q.addTransition(1, ACCESS, new int[]{a, fd}, not(varIsEqualToIntVal(a, 0)), 1);
+        q.addTransition(1, CLOSE, new int[]{a, fd}, varIsEqualToIntVal(a, 0), 5);
+        q.addTransition(1, CLOSE, new int[]{a, fd}, not(varIsEqualToIntVal(a, 0)), 1);
+        q.addTransition(1, EXIT, new int[]{a}, not(varIsEqualToIntVal(a, 0)), 1);
 
-        q.addTransition(2, OPEN, new int[]{pid, fd}, 3);
-        q.addTransition(2, EXIT, new int[]{pid}, 1);
-        q.addTransition(2, CLOSE, new int[]{pid, fd}, 4);
-        q.addTransition(2, SPAWN, new int[]{parent, pid}, 4);
-        q.addTransition(2, SPAWN, new int[]{pid, child}, 2);
+        q.addTransition(2, OPEN, new int[]{a, fd}, isEqual(a, pid), 3);
+        q.addTransition(2, OPEN, new int[]{a, fd}, not(isEqual(a, pid)), 2);
+        q.addTransition(2, CLOSE, new int[]{a, fd}, isEqual(a, pid), 5);
+        q.addTransition(2, CLOSE, new int[]{a, fd}, not(isEqual(a, pid)), 2);
+        q.addTransition(2, ACCESS, new int[]{a, fd}, varIsEqualToIntVal(a, pid), 5);
+        q.addTransition(2, ACCESS, new int[]{a, fd}, not(varIsEqualToIntVal(a, pid)), 2);
+        q.addTransition(2, SPAWN, new int[]{parent, child}, isEqual(parent, pid), 2);
+        q.addTransition(2, SPAWN, new int[]{parent, child}, isEqual(parent, pid), storeVar(pid, child), 2);
 
-        q.addTransition(3, OPEN, new int[]{pid, fd}, 4);
-        q.addTransition(3, CLOSE, new int[]{pid, fd}, 2);
-        q.addTransition(3, ACCESS, new int[]{pid, fd}, 3);
-        q.addTransition(3, SPAWN, new int[]{parent, pid}, 4);
-        q.addTransition(3, SPAWN, new int[]{pid, child}, 3);
-        q.addTransition(3, EXIT, new int[]{pid}, 4);
+        q.addTransition(3, OPEN, new int[]{a, fd}, isEqual(a, pid), 5);
+        q.addTransition(3, OPEN, new int[]{a, fd}, not(isEqual(a, pid)), 3);
+        q.addTransition(3, CLOSE, new int[]{a, fd}, isEqual(a, pid), 2);
+        q.addTransition(3, CLOSE, new int[]{a, fd}, not(isEqual(a, pid)), 3);
+        q.addTransition(3, ACCESS, new int[]{a, fd}, 3);
+        q.addTransition(3, SPAWN, new int[]{parent, child}, isEqual(parent, pid), 3);
+        q.addTransition(3, SPAWN, new int[]{parent, child}, isEqual(parent, pid), storeVar(pid, child), 4);
+        q.addTransition(3, EXIT, new int[]{a}, isEqual(a, pid), 5);
+        q.addTransition(3, EXIT, new int[]{a}, not(isEqual(a, pid)), 3);
 
-        q.setSkipStates(4);
-        q.addFinalStates(4);
+        q.addTransition(4, OPEN, new int[]{a, fd}, isEqual(a, pid), 5);
+        q.addTransition(4, OPEN, new int[]{a, fd}, not(isEqual(a, pid)), 4);
+        q.addTransition(4, CLOSE, new int[]{a, fd}, isEqual(a, pid), 5);
+        q.addTransition(4, CLOSE, new int[]{a, fd}, not(isEqual(a, pid)), 4);
+        q.addTransition(4, ACCESS, new int[]{a, fd}, 4);
+        q.addTransition(4, SPAWN, new int[]{parent, child}, isEqual(parent, pid), 4);
+        q.addTransition(4, SPAWN, new int[]{parent, child}, isEqual(parent, pid), storeVar(pid, child), 4);
+        q.addTransition(4, EXIT, new int[]{a}, not(isEqual(a, pid)), 4);
 
-        qEA = q.make();
+        q.setSkipStates(5);
+        q.addFinalStates(5);
+
+        fdQEA = q.make();
+    }
+
+    private void makeProcessMonitor(){
+        int processSet = 7;
+
+        QEABuilder q = new QEABuilder("Process Spawn-Exit Matching");
+
+        q.addTransition(1, SPAWN, new int[]{parent, child},
+                        and(or(setContainsElement(parent, processSet), varIsEqualToIntVal(parent, 0)),
+                                not(setContainsElement(child, processSet))),
+                        addElementToSet(processSet, child), 1);
+        q.addTransition(1, EXIT, new int[]{pid}, setContainsElement(pid, processSet),
+                        removeElementFromSet(processSet, pid), 1);
+        q.addTransition(1, OPEN, new int[]{a, b}, 1);
+        q.addTransition(1, CLOSE, new int[]{a, b}, 1);
+        q.addTransition(1, ACCESS, new int[]{a, b}, 1);
+
+        q.addFinalStates(1);
+
+        processQEA = q.make();
     }
 
     public QeaMonitor() {
-        makeMonitor();
-        monitor = MonitorFactory.create(qEA);
+        makefdMonitor();
+        fdMonitor = MonitorFactory.create(fdQEA);
+
+        makeProcessMonitor();
+        processMonitor = MonitorFactory.create(processQEA);
     }
 
-    public Verdict step(int event, int arg){
-        return monitor.step(event, arg);
+    public boolean step(int event, int arg){
+        Verdict v1 = fdMonitor.step(event, arg);
+        Verdict v2 = processMonitor.step(event, arg);
+ //       System.out.println(v1.toString() + " and " + v2.toString());
+
+        return ((v1 != Verdict.FAILURE) && (v2 != Verdict.FAILURE));
     }
 
-    public Verdict step(int event, int arg1, int arg2) {
-        return monitor.step(event, arg1, arg2);
+    public boolean step(int event, int arg1, int arg2){
+        Verdict v1 = fdMonitor.step(event, arg1, arg2);
+        Verdict v2 = processMonitor.step(event, arg1, arg2);
+  //      System.out.println(v1.toString() + " and " + v2.toString());
+
+        return ((v1 != Verdict.FAILURE) && (v2 != Verdict.FAILURE));
     }
 }

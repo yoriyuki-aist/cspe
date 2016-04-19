@@ -75,7 +75,8 @@ object MotivatingExample {
     val q1 = new QeaMonitor()
     q1.step (QeaMonitor.OPEN, 0, 4)
     q1.step (QeaMonitor.SPAWN, 0, 1)
-    println(q1.step (QeaMonitor.CLOSE, 1, 4))
+    q1.step (QeaMonitor.CLOSE, 0, 4)
+    println(q1.step(QeaMonitor.EXIT, 1))
     val q2 = new QeaMonitor()
     println(q2.step(QeaMonitor.EXIT, 1))
     val q3 = new QeaMonitor()
@@ -107,26 +108,26 @@ object MotivatingExample {
     q7.step (QeaMonitor.SPAWN, 0, 1)
     println(q7.step (QeaMonitor.ACCESS, 0, 2))
 
-    val max_trace = genEventStream(0, Set.empty).take(300000)
+    val max_trace = genEventStream(0, Set.empty).take(300000).toList
 
     for (i <- 1 to 30) {
       val trace = max_trace.take(i * 10000)
       println("Data : " + i * 10000)
 
-//      val qeaMonitor = new QeaMonitor()
-//      val start_qea = System.nanoTime()
-//      for (e <- trace) {
-//        val verdict = e match {
-//          case Event('Access, pid: Int, fd: Int) => qeaMonitor.step(QeaMonitor.ACCESS, pid, fd)
-//          case Event('Open, pid: Int, fd: Int) => qeaMonitor.step(QeaMonitor.OPEN, pid, fd)
-//          case Event('Close, pid: Int, fd: Int) => qeaMonitor.step(QeaMonitor.CLOSE, pid, fd)
-//          case Event('Spawn, parent: Int, child: Int) => qeaMonitor.step(QeaMonitor.SPAWN, parent, child)
-//          case Event('Exit, pid: Int) => qeaMonitor.step(QeaMonitor.EXIT, pid)
-//        }
-//        assert(verdict)
-//      }
-//      val stop_qea = System.nanoTime()
-//      println("QEA Elapsed: " + (stop_qea - start_qea) / scala.math.pow(10, 9) + "s")
+      val qeaMonitor = new QeaMonitor()
+      val start_qea = System.nanoTime()
+      for (e <- trace) {
+        val verdict = e match {
+          case Event('Access, pid: Int, fd: Int) => qeaMonitor.step(QeaMonitor.ACCESS, pid, fd)
+          case Event('Open, pid: Int, fd: Int) => qeaMonitor.step(QeaMonitor.OPEN, pid, fd)
+          case Event('Close, pid: Int, fd: Int) => qeaMonitor.step(QeaMonitor.CLOSE, pid, fd)
+          case Event('Spawn, parent: Int, child: Int) => qeaMonitor.step(QeaMonitor.SPAWN, parent, child)
+          case Event('Exit, pid: Int) => qeaMonitor.step(QeaMonitor.EXIT, pid)
+        }
+        assert(verdict);
+      }
+      val stop_qea = System.nanoTime()
+      println("QEA Elapsed: " + (stop_qea - start_qea) / scala.math.pow(10, 9) + "s")
 
       val start = System.nanoTime()
       var monitors = new ProcessSet(List(run(0, Set.empty)))

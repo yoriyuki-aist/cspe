@@ -15,6 +15,6 @@ lazy val root = (project in file(".")).
     ),
     libraryDependencies ++= Seq(
     "io.github.nicolasstucki" %% "multisets" % "0.2",
-    "jp.go.aist.cspe" %% "csp_e" % "0.2.0"
+    "jp.go.aist.cspe" %% "csp_e" % "0.5.0"
     )
   )

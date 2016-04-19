@@ -60,7 +60,7 @@ public class QeaMonitor {
     private QEA processQEA;
     private Monitor<QEA> processMonitor;
 
-    private void makefdMonitor() {
+    private void makefdMonitor_negated() {
         int fd = -1;
 
         QEABuilder q = new QEABuilder("Fd Open-Close Matching");
@@ -122,6 +122,39 @@ public class QeaMonitor {
 
         fdQEA = q.make();
     }
+
+    private void makefdMonitor() {
+        int fd = -1;
+        int processSet = 7;
+
+        QEABuilder q = new QEABuilder("Fd Open-Close Matching");
+
+        q.addQuantification(FORALL, fd);
+
+        //1 : loop
+        //2 : error
+        //3 : success <- not used
+        q.addTransition(1, SPAWN, new int[]{parent, child}, setContainsElement(parent, processSet),
+                    addElementToSet(processSet, child), 1);
+        q.addTransition(1, SPAWN, new int[]{parent, child}, not(setContainsElement(parent, processSet)), 1);
+        q.addTransition(1, OPEN, new int[]{a, fd}, setContainsElement(a, processSet), 2);
+        q.addTransition(1, OPEN, new int[]{a, fd}, not(setContainsElement(a, processSet)),
+                addElementToSet(processSet, a), 1);
+        q.addTransition(1, ACCESS, new int[]{a, fd}, setContainsElement(a, processSet), 1);
+        q.addTransition(1, ACCESS, new int[]{a, fd}, not(setContainsElement(a, processSet)), 2);
+        q.addTransition(1, CLOSE, new int[]{a, fd}, setContainsElement(a, processSet),
+                removeElementFromSet(processSet, a), 1);
+        q.addTransition(1, CLOSE, new int[]{a, fd}, not(setContainsElement(a, processSet)),
+                removeElementFromSet(processSet, a), 2);
+        q.addTransition(1, EXIT, new int[]{a}, setContainsElement(a, processSet), 2);
+        q.addTransition(1, EXIT, new int[]{a}, not(setContainsElement(a, processSet)), 1);
+
+        q.setSkipStates(2); //using skip states makes the monitor very slow
+        q.addFinalStates(1);
+
+        fdQEA = q.make();
+    }
+
 
     private void makeProcessMonitor(){
         int processSet = 7;

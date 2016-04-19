@@ -60,69 +60,6 @@ public class QeaMonitor {
     private QEA processQEA;
     private Monitor<QEA> processMonitor;
 
-    private void makefdMonitor_negated() {
-        int fd = -1;
-
-        QEABuilder q = new QEABuilder("Fd Open-Close Matching");
-
-        q.setNegated(true);
-        q.addQuantification(EXISTS, fd);
-
-        //1 : process 0
-        //2 : fd not yet opened
-        //3 : fd opened
-        //4 : in child process
-        //5 : error
-        //6 : success <- not used
-        q.addTransition(1, SPAWN, new int[]{parent, child}, varIsEqualToIntVal(parent, 0), storeVar(pid, child), 2);
-        q.addTransition(1, SPAWN, new int[]{parent, child}, varIsEqualToIntVal(parent, 0), 1);
-        q.addTransition(1, SPAWN, new int[]{parent, child}, not(varIsEqualToIntVal(parent, 0)), 1);
-        q.addTransition(1, OPEN, new int[]{a, fd}, varIsEqualToIntVal(a, 0), storeVar(pid, a), 3);
-        q.addTransition(1, ACCESS, new int[]{a, fd}, varIsEqualToIntVal(a, 0), 5);
-        q.addTransition(1, ACCESS, new int[]{a, fd}, not(varIsEqualToIntVal(a, 0)), 1);
-        q.addTransition(1, CLOSE, new int[]{a, fd}, varIsEqualToIntVal(a, 0), 5);
-        q.addTransition(1, CLOSE, new int[]{a, fd}, not(varIsEqualToIntVal(a, 0)), 1);
-        q.addTransition(1, EXIT, new int[]{a}, not(varIsEqualToIntVal(a, 0)), 1);
-        q.addTransition(1, EXIT, new int[]{a}, varIsEqualToIntVal(a, 0), 5);
-
-        q.addTransition(2, OPEN, new int[]{a, fd}, isEqual(a, pid), 3);
-        q.addTransition(2, OPEN, new int[]{a, fd}, not(isEqual(a, pid)), 2);
-        q.addTransition(2, CLOSE, new int[]{a, fd}, isEqual(a, pid), 5);
-        q.addTransition(2, CLOSE, new int[]{a, fd}, not(isEqual(a, pid)), 2);
-        q.addTransition(2, ACCESS, new int[]{a, fd}, isEqual(a, pid), 5);
-        q.addTransition(2, ACCESS, new int[]{a, fd}, not(isEqual(a, pid)), 2);
-        q.addTransition(2, SPAWN, new int[]{parent, child}, isEqual(parent, pid), 2);
-        q.addTransition(2, SPAWN, new int[]{parent, child}, isEqual(parent, pid), storeVar(pid, child), 2);
-        q.addTransition(2, SPAWN, new int[]{parent, child}, not(isEqual(parent, pid)), 2);
-
-        q.addTransition(3, OPEN, new int[]{a, fd}, isEqual(a, pid), 5);
-        q.addTransition(3, OPEN, new int[]{a, fd}, not(isEqual(a, pid)), 3);
-        q.addTransition(3, CLOSE, new int[]{a, fd}, isEqual(a, pid), 2);
-        q.addTransition(3, CLOSE, new int[]{a, fd}, not(isEqual(a, pid)), 3);
-        q.addTransition(3, ACCESS, new int[]{a, fd}, 3);
-        q.addTransition(3, SPAWN, new int[]{parent, child}, isEqual(parent, pid), 3);
-        q.addTransition(3, SPAWN, new int[]{parent, child}, isEqual(parent, pid), storeVar(pid, child), 4);
-        q.addTransition(3, SPAWN, new int[]{parent, child}, not(isEqual(parent, pid)), 3);
-        q.addTransition(3, EXIT, new int[]{a}, isEqual(a, pid), 5);
-        q.addTransition(3, EXIT, new int[]{a}, not(isEqual(a, pid)), 3);
-
-        q.addTransition(4, OPEN, new int[]{a, fd}, isEqual(a, pid), 5);
-        q.addTransition(4, OPEN, new int[]{a, fd}, not(isEqual(a, pid)), 4);
-        q.addTransition(4, CLOSE, new int[]{a, fd}, isEqual(a, pid), 2);
-        q.addTransition(4, CLOSE, new int[]{a, fd}, not(isEqual(a, pid)), 4);
-        q.addTransition(4, ACCESS, new int[]{a, fd}, 4);
-        q.addTransition(4, SPAWN, new int[]{parent, child}, isEqual(parent, pid), 4);
-        q.addTransition(4, SPAWN, new int[]{parent, child}, isEqual(parent, pid), storeVar(pid, child), 4);
-        q.addTransition(4, SPAWN, new int[]{parent, child}, not(isEqual(parent, pid)), 4);
-        q.addTransition(4, EXIT, new int[]{a}, not(isEqual(a, pid)), 4);
-        q.addTransition(4, EXIT, new int[]{a}, isEqual(a, pid), 5);
-
-        q.setSkipStates(5); //using skip states makes the monitor very slow
-        q.addFinalStates(5);
-
-        fdQEA = q.make();
-    }
-
     private void makefdMonitor() {
         int fd = -1;
         int processSet = 7;
@@ -136,20 +73,16 @@ public class QeaMonitor {
         //3 : success <- not used
         q.addTransition(1, SPAWN, new int[]{parent, child}, setContainsElement(parent, processSet),
                     addElementToSet(processSet, child), 1);
-        q.addTransition(1, SPAWN, new int[]{parent, child}, not(setContainsElement(parent, processSet)), 1);
         q.addTransition(1, OPEN, new int[]{a, fd}, setContainsElement(a, processSet), 2);
         q.addTransition(1, OPEN, new int[]{a, fd}, not(setContainsElement(a, processSet)),
                 addElementToSet(processSet, a), 1);
-        q.addTransition(1, ACCESS, new int[]{a, fd}, setContainsElement(a, processSet), 1);
         q.addTransition(1, ACCESS, new int[]{a, fd}, not(setContainsElement(a, processSet)), 2);
         q.addTransition(1, CLOSE, new int[]{a, fd}, setContainsElement(a, processSet),
                 removeElementFromSet(processSet, a), 1);
-        q.addTransition(1, CLOSE, new int[]{a, fd}, not(setContainsElement(a, processSet)),
-                removeElementFromSet(processSet, a), 2);
+        q.addTransition(1, CLOSE, new int[]{a, fd}, not(setContainsElement(a, processSet)), 2);
         q.addTransition(1, EXIT, new int[]{a}, setContainsElement(a, processSet), 2);
-        q.addTransition(1, EXIT, new int[]{a}, not(setContainsElement(a, processSet)), 1);
 
-        q.setSkipStates(2); //using skip states makes the monitor very slow
+        q.setSkipStates(1, 2); //using skip states makes the monitor very slow
         q.addFinalStates(1);
 
         fdQEA = q.make();

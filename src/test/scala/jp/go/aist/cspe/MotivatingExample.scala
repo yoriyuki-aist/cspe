@@ -50,26 +50,34 @@ object MotivatingExample {
         (if (pid == 0) Array.empty[Stream[AbsEvent]] else Array(skip))
     }
 
-  def run(pid: Int, openFiles: Set[Int]): Process = ?? {
-    case Event('Access, `pid`, fd: Int) if openFiles(fd) =>
-      run(pid, openFiles)
-    case Event('Open, `pid`, fd: Int) if !openFiles(fd) =>
-      run(pid, openFiles + fd)
+  def process(pid: Int, openFiles: Set[Int]): Process = ?? {
     case Event('Spawn, `pid`, child_pid: Int) =>
-      run(pid, openFiles) ||| run(child_pid, openFiles)
+      process(pid, openFiles) ||| process(child_pid, openFiles)
+    case Event('Open, `pid`, fd: Int) if !openFiles(fd) =>
+      process(pid, openFiles + fd)
+    case Event('Access, `pid`, fd: Int) if openFiles(fd) =>
+      process(pid, openFiles)
     case Event('Close, `pid`, fd: Int) if openFiles(fd) =>
-      run(pid, openFiles - fd)
+      process(pid, openFiles - fd)
     case Event('Exit, `pid`) if pid != 0 && openFiles.isEmpty => SKIP
   }
 
+  def uniqProcess(pidSet : Set[Int]) : Process = ?? {
+    case Event('Spawn, _, child_pid : Int) if ! pidSet(child_pid) => uniqProcess(pidSet + child_pid)
+    case Event('Exit, pid : Int) if pidSet(pid) => uniqProcess(pidSet - pid)
+  }
+
+  def system = process(0, Set.empty) || Set('Spawn, 'Exit) || uniqProcess(Set(0))
+
   def main(args: Array[String]) {
-    val monitors = new ProcessSet(List(run(0, Set.empty)))
+    val monitors = new ProcessSet(List(system))
 
     //for debug
     println(monitors << Event('Access, 0, 4))
     println(monitors << Event('Open, 0, 4) << Event('Spawn, 0, 1) << Event('Close, 0, 4) << Event('Exit, 1))
     println(monitors << Event('Exit, 1))
     println(monitors << Event('Spawn, 0, 1) << Event('Open, 1, 4) << Event('Exit, 1))
+    println(monitors << Event('Spawn, 0, 1) << Event('Spawn, 1, 0))
 
     // Should fail
     println(new QeaMonitor() step(QeaMonitor.ACCESS, 0, 4))
@@ -84,6 +92,10 @@ object MotivatingExample {
     q3.step(QeaMonitor.SPAWN, 0, 1)
     q3.step(QeaMonitor.OPEN, 1, 4)
     println(q3.step(QeaMonitor.EXIT, 1))
+    val q8 = new QeaMonitor()
+    q8.step(QeaMonitor.SPAWN, 0, 1)
+    println(q8.step(QeaMonitor.SPAWN, 1, 0))
+
 
     // Should success
     val q4 = new QeaMonitor()
@@ -137,7 +149,7 @@ object MotivatingExample {
 
     trace = max_trace
     val start = System.nanoTime()
-    var cspe_monitors: ProcessSet = new ProcessSet(List(run(0, Set.empty)))
+    var cspe_monitors: ProcessSet = new ProcessSet(List(system))
 
     for (i <- 1 to 30) {
       val chunk = trace.take(10000)

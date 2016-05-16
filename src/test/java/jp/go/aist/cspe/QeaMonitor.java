@@ -96,7 +96,7 @@ public class QeaMonitor {
 
         q.addTransition(1, SPAWN, new int[]{parent, child},
                         and(or(setContainsElement(parent, processSet), varIsEqualToIntVal(parent, 0)),
-                                not(setContainsElement(child, processSet))),
+                                not(or(setContainsElement(child, processSet), varIsEqualToIntVal(child, 0)))),
                         addElementToSet(processSet, child), 1);
         q.addTransition(1, EXIT, new int[]{pid}, setContainsElement(pid, processSet),
                         removeElementFromSet(processSet, pid), 1);

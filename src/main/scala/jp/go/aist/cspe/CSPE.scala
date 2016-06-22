@@ -45,32 +45,10 @@ object CSPE {
     }
   }
 
-  def ||(as : Set[Symbol], f : (AbsEvent => Process)) :Process =
-    ?? {
-      case e => parallel(List(choice(f(e) << e processes), choice(||(as, f) << e processes)), as)
-    }
-
-
-  def |||(f : (AbsEvent => Process)) :Process =
-    ?? {
-      case e => parallel(List(choice(f(e) << e processes), choice(|||(f) << e processes)), Set.empty)
-    }
-
-
-  def <+> (f : (AbsEvent => Process)) : Process =
-    ?? {
-      case e => choice(f(e) << e processes)
-    }
-
-
   def sequence(ps: List[Process]): Process =
     if (ps.isEmpty) SKIP else new Sequence(ps)
 
 
   def interrupt(p: Process, es: Set[Symbol], q: Process): Process =
     new Interrupt(p, es, q)
-
-  
-  def processSet(ps : List[Process]) : ProcessSet = new ProcessSet(ps)
-
 }

@@ -17,7 +17,7 @@ private[cspe] class Rec1[X] (f0 : (X =>Process) => (X => Process), args0 : X, id
   lazy val that = {
     f(rec1(f))(args)
   }
-  override def acceptPrim(e : AbsEvent) : ProcessSet =
+  override def acceptPrim(e : AbsEvent) : Process =
     that << e
 
   override def canTerminate = that canTerminate

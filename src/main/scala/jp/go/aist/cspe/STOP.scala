@@ -11,7 +11,7 @@ import jp.go.aist.cspe.CSPE._
 object STOP extends Process{
 
   // used for verification
-  override def acceptPrim(e : AbsEvent): ProcessSet = processSet(List.empty)
+  override def acceptPrim(e : AbsEvent): Process = Failure
 
   override def canTerminate = false
 

@@ -14,14 +14,6 @@ private[cspe] class Parallel(processes0 : List[Process], as0 : Set[Symbol]) exte
 
   private[cspe] val as = as0
 
-  private def allCombination(b : List[List[Process]]) : List[List[Process]] = {
-    if (b isEmpty) List(List.empty) else {
-      val ps = b.head
-      val rest = b.tail
-      ps flatMap (p => allCombination(rest) map (p :: _))
-    }
-  }
-
   private def collapse(s : List[Process]) : List[Process] = {
     if (s contains Failure) List(Failure) else s
   }
@@ -31,20 +23,16 @@ private[cspe] class Parallel(processes0 : List[Process], as0 : Set[Symbol]) exte
     case e :: y => (Nil, e, y) :: (triplePartitions(y) map (t => (e :: t._1, t._2, t._3)))
   }
 
-  override def acceptPrim(e: AbsEvent): ProcessSet = {
-    if (as.contains(e.alphabet)) {
-      val pnext = processes map (_.accept(e).processes)
-      val ps = allCombination(pnext) map collapse
-      processSet(ps map (parallel(_, as)))
-    } else {
-      val nextPs: List[Process] =
-        triplePartitions(processes) flatMap (t =>
-            t._2.accept(e).processes map (next =>
-              if (next.isFailure) Failure else {
-                parallel(next :: t._1 ++ t._3, as)
-              }
-          ))
-      processSet(nextPs)
+  override def acceptPrim(e: AbsEvent): Process = {
+    if (as.contains(e.alphabet)) new Parallel(processes map (_.accept(e)), as0)
+    else {
+      val nextPs = {
+        triplePartitions(processes) map { t =>
+          val nextP = t._2.acceptPrim(e)
+          parallel(t._1 ++ (nextP :: t._3), as)
+        }
+      }
+      choice(nextPs)
     }
   }
 

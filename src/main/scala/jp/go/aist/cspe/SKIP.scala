@@ -10,7 +10,7 @@ package jp.go.aist.cspe
 import jp.go.aist.cspe.CSPE._
 
 object SKIP extends Process {
-  override def acceptPrim(e : AbsEvent): ProcessSet = processSet(List.empty)
+  override def acceptPrim(e : AbsEvent): Process = Failure
 
   override def canTerminate = true
 

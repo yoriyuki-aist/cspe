@@ -11,7 +11,7 @@ private[cspe] class Rec0 (f0 : Process => Process, id0 : Int) extends Process {
   private val f = f0
   lazy val that = f(this)
   val id = id0
-  override def acceptPrim(e : AbsEvent) : ProcessSet = that.accept(e)
+  override def acceptPrim(e : AbsEvent) : Process = that.accept(e)
 
   override def canTerminate = that.canTerminate
 

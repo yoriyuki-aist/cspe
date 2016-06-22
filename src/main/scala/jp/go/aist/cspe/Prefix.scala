@@ -12,8 +12,8 @@ private[cspe] class Prefix(e00 : AbsEvent, p0 : Process) extends Process {
   private val e0 = e00
   private val p = p0
   // used for verification
-  override def acceptPrim(e: AbsEvent): ProcessSet =
-    if (e == e0) processSet(List(p)) else processSet(List.empty)
+  override def acceptPrim(e: AbsEvent): Process =
+    if (e == e0) p else Failure
 
   override def toString = e0.toString + "->" + p.toString
 

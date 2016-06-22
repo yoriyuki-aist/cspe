@@ -11,8 +11,8 @@ import jp.go.aist.cspe.CSPE._
 private[cspe] class ParamPrefixRelaxed(f0: PartialFunction[AbsEvent, Process], id0 : Int) extends Process {
   val id = id0
   private val f = f0
-  override def acceptPrim(e: AbsEvent): ProcessSet =
-    processSet(List(if (f.isDefinedAt(e)) f(e) else this)) // note 'this' instead of 'Failure'
+  override def acceptPrim(e: AbsEvent): Process =
+    if (f.isDefinedAt(e)) f(e) else this // note 'this' instead of 'Failure'
 
   override def canTerminate = false
 

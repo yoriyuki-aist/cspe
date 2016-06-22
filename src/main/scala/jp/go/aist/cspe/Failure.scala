@@ -10,7 +10,7 @@ import jp.go.aist.cspe.CSPE._
 
 object Failure extends Process {
   override def isFailure = true
-  override def acceptPrim(e : AbsEvent) = processSet(List(this))
+  override def acceptPrim(e : AbsEvent) = this
   override def canTerminate = false
   override def toString = "Failure"
 

@@ -13,16 +13,16 @@ private[cspe] class Interrupt(p0 : Process, as0 : Set[Symbol], q0 : Process) ext
   private val as = as0
   private val q = q0
 
-  override def acceptPrim(e : AbsEvent) : ProcessSet = {
+  override def acceptPrim(e : AbsEvent) : Process = {
     val next = p << e
     if (as contains e.alphabet) {
-      if (next.processes.isEmpty) {
-        processSet(List.empty)
+      if (next.isFailure) {
+        Failure
       } else {
-        processSet(List(q))
+        q
       }
     } else {
-      processSet(next.processes map (interrupt(_, as, q)))
+      interrupt(next, as, q)
     }
   }
 

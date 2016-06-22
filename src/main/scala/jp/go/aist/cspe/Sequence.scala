@@ -20,20 +20,17 @@ private[cspe] class Sequence(ps0 : List[Process]) extends Process {
   }
 
   private val ps = normalize(ps0)
-  override def acceptPrim(e: AbsEvent): ProcessSet = ps match {
-    case Nil => processSet(List.empty)
+  override def acceptPrim(e: AbsEvent): Process = ps match {
+    case Nil => Failure
     case p :: ps =>
       val next = p << e
-      val nextp0 = next.processes map ((p: Process) => {
-        if (p == SKIP) {
-          if (ps.size == 1) ps.last else sequence(ps)
-        } else if (p == Failure) { Failure
-        } else {
-          sequence(p :: ps)
-        }
-      })
-      val nextp = if (p.canTerminate) {nextp0 ++ sequence(ps).acceptPrim(e).processes} else nextp0
-      processSet(nextp filter (!_.isFailure))
+      if (next.isFailure) {
+        Failure
+      } else if (next.canTerminate) {
+        sequence(ps)
+      } else {
+        sequence(next :: ps)
+      }
   }
 
   override def canTerminate = ps.forall(_.canTerminate)

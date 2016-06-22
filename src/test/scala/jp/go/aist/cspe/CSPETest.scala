@@ -111,12 +111,12 @@ object CSPETest {
     val seq = Event('a) ->: SKIP $ Event('b) ->: SKIP
 
     val seq_ret = seq << Event('a) << Event('b)
-    assert(seq_ret == processSet(List(SKIP)))
+    assert(seq_ret.isFailure)
 
     val inter = (Event('a) ->: Event('b) ->: Event('c) ->: SKIP) | Set('b) |> (Event('d) ->: SKIP)
 
     val inter_result = inter << Event('a) << Event('b) << Event('d)
-    assert(inter_result == processSet(List(SKIP)))
+    assert(inter_result == SKIP)
 
     val inter_result2 = inter << Event('a) << Event('b) << Event('c)
     assert(inter_result2.isFailure)
@@ -277,28 +277,20 @@ object CSPETest {
       openCloseRet8 <<
         Event('any)
 
-    println(openCloseRet9.processes.size)
-
     val openCloseRet10 =
       openCloseRet9 <<
         Event('any)
-
-    println(openCloseRet10.processes.size)
 
     val openCloseRet11 =
       openCloseRet10 <<
         Event('any)
 
-    println(openCloseRet11.processes.size)
-
     assert(openCloseRet11.canTerminate)
 
-    val openCloseFailure : ProcessSet=
+    val openCloseFailure : Process =
       openCloseSimpl << Event('close)
 
-    println(openCloseFailure.processes.size)
     assert(openCloseFailure.isFailure)
-
 
     val openCloseNoFailure =
       process (v1 = p =>
@@ -309,10 +301,10 @@ object CSPETest {
         }
       )
 
-    val openCloseFailure2 : ProcessSet=
+    val openCloseFailure2 : Process=
       openCloseNoFailure << Event('close)
 
-    println(openCloseFailure2.processes)
+    println(openCloseFailure2)
     assert(openCloseFailure2.isFailure)
 
     // Examples in Havelund and Reger paper
@@ -362,14 +354,14 @@ object CSPETest {
       ?? {
         case e@Event(_, r1: Int, r2: Int) =>
           if ((knownRovers & Set(r1, r2)) == Set.empty) {
-            choice(leader(r1, knownRovers + r2, Set.empty, Set.empty) << e processes) <+>
-              choice(leader(r2, knownRovers + r1, Set.empty, Set.empty) << e processes) <+> listener(knownRovers + r1 + r2)
+            leader(r1, knownRovers + r2, Set.empty, Set.empty) << e <+>
+              leader(r2, knownRovers + r1, Set.empty, Set.empty) << e <+> listener(knownRovers + r1 + r2)
           } else if ((knownRovers & Set(r1, r2)) == Set(r1, r2)) {
             listener(knownRovers)
           } else if (knownRovers contains r1) {
-            choice(leader(r2, knownRovers, Set.empty, Set.empty) << e processes) <+> listener(knownRovers + r2)
+            leader(r2, knownRovers, Set.empty, Set.empty) << e <+> listener(knownRovers + r2)
           } else {
-            choice(leader(r1, knownRovers, Set.empty, Set.empty) << e processes) <+> listener(knownRovers + r1)
+            leader(r1, knownRovers, Set.empty, Set.empty) << e <+> listener(knownRovers + r1)
           }
       }
 

@@ -43,13 +43,13 @@ This is the Builder of monitors and ProcessSet.  CSPE is supposed to be used by 
 Method | Action
 -------|-------
 `? g p` | Guard
-`?? {case Event('...) ...}` | If it receive mathing event, execute the matching clause.  Otherwise, it fails.
-`??? {case Event('...) ...}` | If it receive mathing event, execute the matching clause.  Otherwise, it just waits.
-`choice(Set(p1, p2, ...))` | External choice
-`parallel(Bag(p1, p2, ...), Set('a, 'b, ...))` | Parallel composition of `p1, p2,...` using `'a, 'b...` as synchronization events
+`?? {case Event('...) ...}` | If it receives mathing event, executes the matching clause.  Otherwise, it fails.
+`??? {case Event('...) ...}` | If it receives mathing event, executes the matching clause.  Otherwise, it just waits.
+`choice(List(p1, p2, ...))` | External choice
+`parallel(List(p1, p2, ...), Set('a, 'b, ...))` | Parallel composition of `p1, p2,...` using `'a, 'b...` as synchronization events
 `sequence(p1 : p2 : ...)` | Sequential composition of `p1, p2, ...`
 `interrupt(p, Set('a, 'b,...), q)` | Interrupt process `p` when one of `'a, ...'` occurs and execute process `q`
-`processSet(Set(p1, p2, ...))` | Builder method for `ProcessSet`
+`processSet(List(p1, p2, ...))` | Builder method for `ProcessSet`
 
 ### Process
 

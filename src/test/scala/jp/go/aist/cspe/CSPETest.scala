@@ -92,7 +92,7 @@ object CSPETest {
     val par2_result2 = par2 << Event('a)
     assert(par2_result2.isFailure)
 
-    val intl2 : Process = ?? {case Event('a, _) => STOP} ||| ?? {case Event(_, _) => Failure}
+    val intl2 : Process = ?? {case Event('a, _) => STOP} ||| ?? {case Event(_, _) => failure()}
 
     val intl2_result = intl2 << Event('a, 1)
     assert(!intl2_result.isFailure)
@@ -180,7 +180,7 @@ object CSPETest {
                     case Event('acquire, t2, `b`) =>
                       ??? {
                         case Event('release, `t2`, `b`) => STOP
-                        case Event('acquire, `t2`, `a`) => assert(false); Failure
+                        case Event('acquire, `t2`, `a`) => assert(false); failure()
                       }
                   }
               }
@@ -214,7 +214,7 @@ object CSPETest {
       case Event('open) =>
         (openCloseSimpl <+> SKIP) |||
           ?? { case Event('close) => SKIP}
-      case Event('close) => Failure
+      case Event('close) => failure()
       case _ => openCloseSimpl <+> SKIP
     }
 
@@ -285,7 +285,7 @@ object CSPETest {
       openCloseRet10 <<
         Event('any)
 
-    assert(openCloseRet11.canTerminatePrim)
+    assert(openCloseRet11.canTerminate)
 
     val openCloseFailure : Process =
       openCloseSimpl << Event('close)
@@ -467,7 +467,7 @@ object CSPETest {
     def requested(t: Symbol, r: Symbol) = ?? {
       case Event('deny, `t`, `r`) => SKIP
       case Event('grant, `t`, `r`) =>
-        if (isGranted(r) || hasConflict(r)) {Failure} else {
+        if (isGranted(r) || hasConflict(r)) {failure()} else {
           addResource(t, r)
           granted(t, r)
         }
@@ -553,7 +553,7 @@ object CSPETest {
           Order += (l1 -> (oldSet + l2))
           locked(t, l1)
         } else {
-          Failure
+          failure()
         }
     }
 

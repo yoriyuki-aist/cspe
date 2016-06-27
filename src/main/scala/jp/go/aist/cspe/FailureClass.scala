@@ -15,5 +15,5 @@ private[cspe] abstract class FailureClass extends Process {
   final override def canTerminatePrim = false
   final override def toFailure = Some(this)
 
-  abstract def handle(handler : PartialFunction[Any, Process]) : Process
+  def handle(handler : PartialFunction[Any, Process]) : Process
 }

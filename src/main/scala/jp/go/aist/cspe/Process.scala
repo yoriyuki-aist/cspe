@@ -43,7 +43,7 @@ abstract class Process {
 
   final def isFailure = this match {
     case p : FailureClass => true
-    case p : _ => false
+    case _ : Process => false
   }
 
   final def canTerminate = this.canTerminatePrim && ! this.isFailure

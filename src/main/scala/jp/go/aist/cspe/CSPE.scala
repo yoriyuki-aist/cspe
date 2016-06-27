@@ -38,12 +38,15 @@ object CSPE {
 
   def choice(ps: List[Process]): Process = {
     val ps1 = ps.filter (! _.isFailure)
-    if (ps1 isEmpty) new FailureSet(ps) else new Choice(ps1)
+    if (ps1 isEmpty) new FailureSet(ps flatMap (_.toFailure.toList)) else new Choice(ps1)
   }
 
   def parallel(ps: List[Process], as: Set[Symbol]): Process = {
      if (ps isEmpty) SKIP else {
-        if (ps contains Failure) Failure else new Parallel(ps, as)
+       ps.find(_.isFailure) match {
+         case Some(p) => p
+         case None => new Parallel(ps, as)
+       }
     }
   }
 

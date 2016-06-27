@@ -17,6 +17,8 @@ abstract class Process {
 
   private[cspe] def choiceProcesses : List[Process] =  List(this)
 
+  private[cspe] def toFailure : Option[FailureClass] = None
+
   // used for creation
   def ->:(e: AbsEvent): Process = new Prefix(e, this)
 

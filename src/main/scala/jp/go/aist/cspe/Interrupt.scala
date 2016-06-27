@@ -15,12 +15,10 @@ private[cspe] class Interrupt(p0 : Process, as0 : Set[Symbol], q0 : Process) ext
 
   override def acceptPrim(e : AbsEvent) : Process = {
     val next = p << e
-    if (as contains e.alphabet) {
-      if (next.isFailure) {
-        Failure
-      } else {
-        q
-      }
+    if (as contains e.alphabet) if (next.isFailure) {
+      next
+    } else {
+      q
     } else {
       interrupt(next, as, q)
     }

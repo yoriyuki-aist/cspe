@@ -157,7 +157,7 @@ object StraceMatch {
       nextProcess(pid, fds, closedFds)
   }
 
-  def system : Process = <+> {
+  def system : Process = ?? {
     case Event(_, pid : Int, _, _) =>
       val fdData = new FdData(None, false)
       unixProcess(pid, Map(0 -> fdData, 1 -> fdData, 2 -> fdData), Set.empty)
@@ -165,7 +165,7 @@ object StraceMatch {
 
   def main (as : Array[String]) {
     var line = StdIn.readLine()
-    var monitor = processSet(List(system))
+    var monitor = system
     var line_num = 0
 
     while (line != null) {
@@ -182,7 +182,7 @@ object StraceMatch {
 
       line = StdIn.readLine()
     }
-    if (monitor.canTerminate) println("Success!") else {
+    if (monitor.canTerminatePrim) println("Success!") else {
       println(monitor)
     }
   }

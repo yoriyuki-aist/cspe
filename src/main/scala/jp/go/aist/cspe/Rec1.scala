@@ -20,7 +20,7 @@ private[cspe] class Rec1[X] (f0 : (X =>Process) => (X => Process), args0 : X, id
   override def acceptPrim(e : AbsEvent) : Process =
     that << e
 
-  override def canTerminate = that canTerminate
+  override def canTerminatePrim = that canTerminatePrim
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[Rec1[X]]
 

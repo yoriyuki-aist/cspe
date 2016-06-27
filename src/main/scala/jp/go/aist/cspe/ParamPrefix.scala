@@ -14,7 +14,7 @@ private[cspe] class ParamPrefix(f : PartialFunction[AbsEvent, Process], id0 : In
   override def acceptPrim(e: AbsEvent): Process =
     if (f.isDefinedAt(e)) f(e) else Failure
 
-  override def canTerminate = false
+  override def canTerminatePrim = false
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[ParamPrefix]
 

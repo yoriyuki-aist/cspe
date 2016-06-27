@@ -12,15 +12,15 @@ private[cspe] class Choice(ps0: List[Process]) extends Process {
   // used for verification
   private val ps = ps0 flatMap (_.choiceProcesses)
 
-  override def choiceProcesses = ps
+  private[cspe] override def choiceProcesses = ps
 
-  override def acceptPrim(e: AbsEvent): Process = {
+  private[cspe] override def acceptPrim(e: AbsEvent): Process = {
     val qs = ps.map(_.<<(e))
     choice(qs)
    }
 
-  override def canTerminate : Boolean = {
-    ps.exists(_.canTerminate)
+  override def canTerminatePrim : Boolean = {
+    ps.exists(_.canTerminatePrim)
   }
 
   override def toString = "<+>" + ps.toString

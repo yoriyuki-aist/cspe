@@ -13,7 +13,7 @@ private[cspe] class Rec0 (f0 : Process => Process, id0 : Int) extends Process {
   val id = id0
   override def acceptPrim(e : AbsEvent) : Process = that.accept(e)
 
-  override def canTerminate = that.canTerminate
+  override def canTerminatePrim = that.canTerminatePrim
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[Rec0]
 

@@ -26,14 +26,14 @@ private[cspe] class Sequence(ps0 : List[Process]) extends Process {
       val next = p << e
       if (next.isFailure) {
         Failure
-      } else if (next.canTerminate) {
+      } else if (next.canTerminatePrim) {
         sequence(ps)
       } else {
         sequence(next :: ps)
       }
   }
 
-  override def canTerminate = ps.forall(_.canTerminate)
+  override def canTerminatePrim = ps.forall(_.canTerminatePrim)
 
   override def toString = "$" + ps.toString()
 

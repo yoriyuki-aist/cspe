@@ -13,7 +13,7 @@ object STOP extends Process{
   // used for verification
   override def acceptPrim(e : AbsEvent): Process = Failure
 
-  override def canTerminate = false
+  override def canTerminatePrim = false
 
   override def toString = "STOP"
   override def equals(other: Any) = other match {

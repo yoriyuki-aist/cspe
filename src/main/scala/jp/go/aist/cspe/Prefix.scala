@@ -17,7 +17,7 @@ private[cspe] class Prefix(e00 : AbsEvent, p0 : Process) extends Process {
 
   override def toString = e0.toString + "->" + p.toString
 
-  override def canTerminate = false
+  override def canTerminatePrim = false
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[Prefix]
 

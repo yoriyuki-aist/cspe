@@ -8,11 +8,12 @@
 package jp.go.aist.cspe
 import jp.go.aist.cspe.CSPE._
 
-object Failure extends Process {
-  override def isFailure = true
-  override def acceptPrim(e : AbsEvent) = this
-  override def canTerminate = false
+private[cspe] object Failure extends FailureClass{
   override def toString = "Failure"
+
+  override def handle(handler: PartialFunction[Any, Process]): Process = {
+    handler(())
+  }
 
   override def equals(other: Any) = other match {
     case that: AnyRef => this eq that

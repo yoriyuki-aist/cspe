@@ -26,8 +26,8 @@ private[cspe] class Interrupt(p0 : Process, as0 : Set[Symbol], q0 : Process) ext
     }
   }
 
-  override def canTerminate = {
-    p.canTerminate
+  override def canTerminatePrim = {
+    p.canTerminatePrim
   }
 
   override def toString = p.toString + "|" + as.toString + ">" + q.toString

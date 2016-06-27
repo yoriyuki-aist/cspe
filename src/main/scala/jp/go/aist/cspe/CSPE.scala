@@ -38,7 +38,7 @@ object CSPE {
 
   def choice(ps: List[Process]): Process = {
     val ps1 = ps.filter (! _.isFailure)
-    if (ps1 isEmpty) Failure else new Choice(ps1)
+    if (ps1 isEmpty) new FailureSet(ps) else new Choice(ps1)
   }
 
   def parallel(ps: List[Process], as: Set[Symbol]): Process = {
@@ -53,4 +53,9 @@ object CSPE {
 
   def interrupt(p: Process, es: Set[Symbol], q: Process): Process =
     new Interrupt(p, es, q)
+
+  def capture(f : AbsEvent => Process) : Process =
+    ?? {case e => f(e)}
+
+  def failure(param: Any) = new FailureWithParam(param)
 }

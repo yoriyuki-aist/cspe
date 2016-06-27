@@ -11,11 +11,11 @@ import jp.go.aist.cspe.CSPE._
 
 abstract class Process {
 
-  def acceptPrim(e: AbsEvent): Process
+  private[cspe] def acceptPrim(e: AbsEvent): Process
 
-  def canTerminate : Boolean
+  private[cspe] def canTerminatePrim : Boolean
 
-  protected[cspe] def choiceProcesses : List[Process] =  List(this)
+  private[cspe] def choiceProcesses : List[Process] =  List(this)
 
   // used for creation
   def ->:(e: AbsEvent): Process = new Prefix(e, this)
@@ -31,19 +31,27 @@ abstract class Process {
 
   def |(as: Set[Symbol]) = new PartialInterrupt(this, as)
 
+  def recover(errorHandler : PartialFunction[Any, Process]) : Process =
+    new Recover(this, errorHandler)
+
   //used for verification
   def accept(e: AbsEvent): Process = this.acceptPrim(e)
 
   //def accept(e: AbsEvent) : Process = this.acceptPrim(e)
 
-  def isFailure = false
+  final def isFailure = this match {
+    case p : FailureClass => true
+    case p : _ => false
+  }
+
+  final def canTerminate = this.canTerminatePrim && ! this.isFailure
 
   //Accept Event
   def <<(e: AbsEvent): Process = this.accept(e)
 
   //Accept Events
   def |=(s: Traversable[AbsEvent]): Boolean =
-    (this /: s) ((p, e) => p.acceptPrim(e)) canTerminate
+    (this /: s) ((p, e) => p.acceptPrim(e)) canTerminatePrim
 
   def |~(s: Traversable[AbsEvent]): Boolean =
     ! ((this /: s) ((p, e) => p.acceptPrim(e)) isFailure)

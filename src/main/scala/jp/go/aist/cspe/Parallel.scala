@@ -12,7 +12,7 @@ private[cspe] class Parallel(processes0 : List[Process], as0 : Set[Symbol]) exte
 
   private val processes = processes0
 
-  private[cspe] val as = as0
+  private val as = as0
 
   private def triplePartitions[X] : List[X] => List[Tuple3[List[X], X ,List[X]]] = {
     case Nil => Nil
@@ -32,8 +32,8 @@ private[cspe] class Parallel(processes0 : List[Process], as0 : Set[Symbol]) exte
     }
   }
 
-  override def canTerminate = {
-    processes.forall(_.canTerminate)
+  override def canTerminatePrim = {
+    processes.forall(_.canTerminatePrim)
   }
 
   override def toString = "||" + as.toString + " " + processes.toString

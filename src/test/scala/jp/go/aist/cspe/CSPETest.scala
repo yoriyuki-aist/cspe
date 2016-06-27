@@ -285,7 +285,7 @@ object CSPETest {
       openCloseRet10 <<
         Event('any)
 
-    assert(openCloseRet11.canTerminate)
+    assert(openCloseRet11.canTerminatePrim)
 
     val openCloseFailure : Process =
       openCloseSimpl << Event('close)

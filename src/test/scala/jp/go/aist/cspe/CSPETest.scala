@@ -95,7 +95,6 @@ object CSPETest {
     val intl2 : Process = ?? {case Event('a, _) => STOP} ||| ?? {case Event(_, _) => Failure}
 
     val intl2_result = intl2 << Event('a, 1)
-    println(intl2_result)
     assert(!intl2_result.isFailure)
     val intl2_result2 = intl2 << Event('b, 1)
     assert(intl2_result2.isFailure)
@@ -111,7 +110,8 @@ object CSPETest {
     val seq = Event('a) ->: SKIP $ Event('b) ->: SKIP
 
     val seq_ret = seq << Event('a) << Event('b)
-    assert(seq_ret.isFailure)
+    println(seq_ret)
+    assert(!seq_ret.isFailure)
 
     val inter = (Event('a) ->: Event('b) ->: Event('c) ->: SKIP) | Set('b) |> (Event('d) ->: SKIP)
 
@@ -556,6 +556,8 @@ object CSPETest {
           Failure
         }
     }
+
+    println(lockOrder << Event('lock, 't1, 'l1) << Event('lock, 't2, 'l1) << Event('lock, 't1, 'l2) << Event('lock, 't2, 'l2))
 
     assert(lockOrder |~ List(Event('lock, 't1, 'l1), Event('lock, 't2, 'l1), Event('lock, 't1, 'l2), Event('lock, 't2, 'l2)))
 

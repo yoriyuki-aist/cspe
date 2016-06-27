@@ -15,6 +15,8 @@ abstract class Process {
 
   def canTerminate : Boolean
 
+  protected[cspe] def choiceProcesses : List[Process] =  List(this)
+
   // used for creation
   def ->:(e: AbsEvent): Process = new Prefix(e, this)
 
@@ -44,7 +46,7 @@ abstract class Process {
     (this /: s) ((p, e) => p.acceptPrim(e)) canTerminate
 
   def |~(s: Traversable[AbsEvent]): Boolean =
-    (this /: s) ((p, e) => p.acceptPrim(e)) isFailure
+    ! ((this /: s) ((p, e) => p.acceptPrim(e)) isFailure)
 
   def equals (other: Any) : Boolean
 

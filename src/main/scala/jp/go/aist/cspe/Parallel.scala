@@ -10,13 +10,9 @@ import jp.go.aist.cspe.CSPE._
 
 private[cspe] class Parallel(processes0 : List[Process], as0 : Set[Symbol]) extends Process {
 
-  private[cspe] val processes = processes0
+  private val processes = processes0
 
   private[cspe] val as = as0
-
-  private def collapse(s : List[Process]) : List[Process] = {
-    if (s contains Failure) List(Failure) else s
-  }
 
   private def triplePartitions[X] : List[X] => List[Tuple3[List[X], X ,List[X]]] = {
     case Nil => Nil
@@ -24,12 +20,12 @@ private[cspe] class Parallel(processes0 : List[Process], as0 : Set[Symbol]) exte
   }
 
   override def acceptPrim(e: AbsEvent): Process = {
-    if (as.contains(e.alphabet)) new Parallel(processes map (_.accept(e)), as0)
+    if (as.contains(e.alphabet)) parallel(processes map (_.accept(e)), as0)
     else {
       val nextPs = {
         triplePartitions(processes) map { t =>
           val nextP = t._2.acceptPrim(e)
-          parallel(t._1 ++ (nextP :: t._3), as)
+          if (nextP.isFailure) Failure else parallel(t._1 ++ (nextP :: t._3), as)
         }
       }
       choice(nextPs)

@@ -36,8 +36,10 @@ object CSPE {
     new ParamPrefixRelaxed(f, objId) /// Relaxed semantics
   }
 
-  def choice(ps: List[Process]): Process =
-    new Choice(ps)
+  def choice(ps: List[Process]): Process = {
+    val ps1 = ps.filter (! _.isFailure)
+    if (ps1 isEmpty) Failure else new Choice(ps1)
+  }
 
   def parallel(ps: List[Process], as: Set[Symbol]): Process = {
      if (ps isEmpty) SKIP else {

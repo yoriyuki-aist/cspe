@@ -10,11 +10,11 @@ import jp.go.aist.cspe.CSPE._
 
 private[cspe] class ParamPrefix(f : PartialFunction[AbsEvent, Process], id0 : Int) extends Process {
     // used for verification
-    val id = id0
-    override def acceptPrim(e: AbsEvent): Process =
-      if (f.isDefinedAt(e)) f(e) else Failure
+  val id = id0
+  override def acceptPrim(e: AbsEvent): Process =
+    if (f.isDefinedAt(e)) f(e) else Failure
 
-    override def canTerminate = false
+  override def canTerminate = false
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[ParamPrefix]
 

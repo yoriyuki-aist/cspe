@@ -70,31 +70,31 @@ object MotivatingExample {
   def system = process(0, Set.empty) || Set('Spawn, 'Exit) || uniqProcess(Set(0))
 
   def main(args: Array[String]) {
-    val monitors = new ProcessSet(List(system))
+    val monitors = system
 
     //for debug
-    println(monitors << Event('Access, 0, 4))
-    println(monitors << Event('Open, 0, 4) << Event('Spawn, 0, 1) << Event('Close, 0, 4) << Event('Exit, 1))
-    println(monitors << Event('Exit, 1))
-    println(monitors << Event('Spawn, 0, 1) << Event('Open, 1, 4) << Event('Exit, 1))
-    println(monitors << Event('Spawn, 0, 1) << Event('Spawn, 1, 0))
+    assert(! (monitors |~ List(Event('Access, 0, 4))))
+    assert (!(monitors |~ List(Event('Open, 0, 4), Event('Spawn, 0, 1), Event('Close, 0, 4), Event('Exit, 1))))
+    assert(!(monitors |~ List(Event('Exit, 1))))
+    assert(!(monitors |~ List(Event('Spawn, 0, 1), Event('Open, 1, 4), Event('Exit, 1))))
+    assert(!(monitors |~ List(Event('Spawn, 0, 1), Event('Spawn, 1, 0))))
 
     // Should fail
-    println(new QeaMonitor() step(QeaMonitor.ACCESS, 0, 4))
+    assert(! (new QeaMonitor() step(QeaMonitor.ACCESS, 0, 4)))
     val q1 = new QeaMonitor()
     q1.step(QeaMonitor.OPEN, 0, 4)
     q1.step(QeaMonitor.SPAWN, 0, 1)
     q1.step(QeaMonitor.CLOSE, 0, 4)
-    println(q1.step(QeaMonitor.EXIT, 1))
+    assert(!q1.step(QeaMonitor.EXIT, 1))
     val q2 = new QeaMonitor()
-    println(q2.step(QeaMonitor.EXIT, 1))
+    assert(!q2.step(QeaMonitor.EXIT, 1))
     val q3 = new QeaMonitor()
     q3.step(QeaMonitor.SPAWN, 0, 1)
     q3.step(QeaMonitor.OPEN, 1, 4)
-    println(q3.step(QeaMonitor.EXIT, 1))
+    assert(!q3.step(QeaMonitor.EXIT, 1))
     val q8 = new QeaMonitor()
     q8.step(QeaMonitor.SPAWN, 0, 1)
-    println(q8.step(QeaMonitor.SPAWN, 1, 0))
+    assert(! q8.step(QeaMonitor.SPAWN, 1, 0))
 
 
     // Should success
@@ -103,23 +103,23 @@ object MotivatingExample {
     q4.step(QeaMonitor.OPEN, 1, 1)
     q4.step(QeaMonitor.ACCESS, 1, 1)
     q4.step(QeaMonitor.CLOSE, 1, 1)
-    println(q4.step(QeaMonitor.EXIT, 1))
+    assert(q4.step(QeaMonitor.EXIT, 1))
 
     val q5 = new QeaMonitor()
     q5.step(QeaMonitor.SPAWN, 0, 1)
     q5.step(QeaMonitor.OPEN, 1, 1)
     q5.step(QeaMonitor.CLOSE, 1, 1)
-    println(q5.step(QeaMonitor.EXIT, 1))
+    assert(q5.step(QeaMonitor.EXIT, 1))
 
     val q6 = new QeaMonitor()
     q6.step(QeaMonitor.OPEN, 0, 1372)
     q6.step(QeaMonitor.SPAWN, 0, 1371)
-    println(q6.step(QeaMonitor.ACCESS, 0, 1372))
+    assert(q6.step(QeaMonitor.ACCESS, 0, 1372))
 
     val q7 = new QeaMonitor()
     q7.step(QeaMonitor.OPEN, 0, 2)
     q7.step(QeaMonitor.SPAWN, 0, 1)
-    println(q7.step(QeaMonitor.ACCESS, 0, 2))
+    assert(q7.step(QeaMonitor.ACCESS, 0, 2))
 
     val max_trace = genEventStream(0, Set.empty).take(300000).toList
 
@@ -149,7 +149,7 @@ object MotivatingExample {
 
     trace = max_trace
     val start = System.nanoTime()
-    var cspe_monitors: ProcessSet = new ProcessSet(List(system))
+    var cspe_monitors: Process = system
 
     for (i <- 1 to 30) {
       val chunk = trace.take(10000)

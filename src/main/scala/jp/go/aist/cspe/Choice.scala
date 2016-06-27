@@ -10,10 +10,13 @@ import jp.go.aist.cspe.CSPE._
 
 private[cspe] class Choice(ps0: List[Process]) extends Process {
   // used for verification
-  private val ps = ps0
+  private val ps = ps0 flatMap (_.choiceProcesses)
+
+  override def choiceProcesses = ps
+
   override def acceptPrim(e: AbsEvent): Process = {
     val qs = ps.map(_.<<(e))
-    new Choice(qs)
+    choice(qs)
    }
 
   override def canTerminate : Boolean = {

@@ -13,6 +13,8 @@ import jp.go.aist.stracematch._
 import scala.io.StdIn
 
 object StraceMatch {
+  var line = ""
+  var line_num = 0
 
   def parseLine(line : String): Array[String] = {
     val s1 = line split "[:,=()]+" map(_.trim) filter(_ != "")
@@ -57,7 +59,7 @@ object StraceMatch {
 
   def unixProcess(pid : Int, fds : Map[Int, FdData], closedFds : Set[Int]) : Process = ?? {
     //Create file descriptors
-    case Event('creat, _) => Failure //creat is obsolue
+    case Event('creat, _) => failure("creat is obsolute") //creat is obsolue
     case Event('open | 'open_nocancel, `pid`, tid: Int, Array( _, oflag: String, _, s: String, _)) =>
   //    println("open ! " + s)
       val fd = s.toInt
@@ -124,11 +126,11 @@ object StraceMatch {
     //Closing file descriptor
     case Event('close | 'close_nocancel, `pid`, tid : Int, Array(s: String, _, _)) =>
       val fd = h2i(s)
-      if (closedFds contains fd) {Failure} else {
+      if (closedFds contains fd) {failure("duplicated close")} else {
         (fds get fd) flatMap (_.openThread) match {
         case None => nextProcess(pid, fds - fd, closedFds + fd)
         case Some(tid1) =>
-          if (tid1 == tid) {nextProcess(pid, fds - fd, closedFds + fd)} else Failure
+          if (tid1 == tid) {nextProcess(pid, fds - fd, closedFds + fd)} else failure("opening thread and closing thread are diffrent")
       }
     }
     //Changing properties
@@ -155,6 +157,11 @@ object StraceMatch {
     //Otherwise
     case Event(_, `pid`, _, _) =>
       nextProcess(pid, fds, closedFds)
+  } recover {
+    case str => println("Error: " + str + " at " + line_num + ":" + line)
+      nextProcess(pid, fds, closedFds)
+    case _ => println("Unexpected error at " + line_num + ":" + line)
+      nextProcess(pid, fds, closedFds)
   }
 
   def system : Process = ?? {
@@ -164,9 +171,9 @@ object StraceMatch {
   }
 
   def main (as : Array[String]) {
-    var line = StdIn.readLine()
+    line = StdIn.readLine()
     var monitor = system
-    var line_num = 0
+    line_num = 0
 
     while (line != null) {
       val args : Array[String] = parseLine(line)
@@ -178,12 +185,8 @@ object StraceMatch {
         case Some(event) =>
           monitor = monitor << event
         case None => }
-      if (monitor.isFailure) { println(line_num.toString + ": " + line); sys.exit(-1)}
 
       line = StdIn.readLine()
-    }
-    if (monitor.canTerminatePrim) println("Success!") else {
-      println(monitor)
     }
   }
 }

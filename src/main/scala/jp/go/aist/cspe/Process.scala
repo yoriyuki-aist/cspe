@@ -17,6 +17,8 @@ abstract class Process {
 
   private[cspe] def choiceProcesses : List[Process] =  List(this)
 
+  private[cspe] def toFailure : Option[FailureClass] = None
+
   // used for creation
   def ->:(e: AbsEvent): Process = new Prefix(e, this)
 
@@ -41,7 +43,7 @@ abstract class Process {
 
   final def isFailure = this match {
     case p : FailureClass => true
-    case p : _ => false
+    case _ : Process => false
   }
 
   final def canTerminate = this.canTerminatePrim && ! this.isFailure

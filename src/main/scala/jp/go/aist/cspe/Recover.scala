@@ -17,7 +17,7 @@ private[cspe] class Recover(p0 : Process, errorHandler0 : PartialFunction[Any, P
   private[cspe] override def acceptPrim(e : AbsEvent): Process = {
     p << e match {
       case p : FailureClass => p handle errorHandler
-      case p : _ => p recover errorHandler
+      case p : Process => p recover errorHandler
     }
   }
 

@@ -25,7 +25,7 @@ private[cspe] class Parallel(processes0 : List[Process], as0 : Set[Symbol]) exte
       val nextPs = {
         triplePartitions(processes) map { t =>
           val nextP = t._2.acceptPrim(e)
-          if (nextP.isFailure) Failure else parallel(t._1 ++ (nextP :: t._3), as)
+          if (nextP.isFailure) nextP else parallel(t._1 ++ (nextP :: t._3), as)
         }
       }
       choice(nextPs)

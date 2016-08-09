@@ -14,7 +14,7 @@ private[cspe] class Sequence(ps0 : List[Process]) extends Process {
 
   private def normalize (ps : List[Process]) : List[Process] = ps match {
     case Nil => Nil
-    case Failure :: ps1 => List(Failure)
+    case p :: ps1 if p.isFailure => List(p)
     case SKIP :: ps1 => normalize(ps1)
     case p :: ps1 => p :: normalize(ps1)
   }
@@ -25,7 +25,7 @@ private[cspe] class Sequence(ps0 : List[Process]) extends Process {
     case p :: ps =>
       val next = p << e
       if (next.isFailure) {
-        Failure
+        next
       } else if (next.canTerminatePrim) {
         sequence(ps)
       } else {

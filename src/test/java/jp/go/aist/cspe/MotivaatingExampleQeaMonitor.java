@@ -29,7 +29,7 @@ import qea.structure.impl.other.Verdict;
 
 import java.util.HashMap;
 
-public class QeaMonitor {
+public class MotivaatingExampleQeaMonitor {
     public static int ACCESS = 1;
     public static int OPEN = 2;
     public static int CLOSE = 3;
@@ -109,7 +109,7 @@ public class QeaMonitor {
         processQEA = q.make();
     }
 
-    public QeaMonitor() {
+    public MotivaatingExampleQeaMonitor() {
         makefdMonitor();
         fdMonitor = MonitorFactory.create(fdQEA);
 

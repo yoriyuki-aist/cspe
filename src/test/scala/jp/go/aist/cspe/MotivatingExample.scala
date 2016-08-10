@@ -80,53 +80,53 @@ object MotivatingExample {
     println(monitors << Event('Spawn, 0, 1) << Event('Spawn, 1, 0))
 
     // Should fail
-    println(new QeaMonitor() step(QeaMonitor.ACCESS, 0, 4))
-    val q1 = new QeaMonitor()
-    q1.step(QeaMonitor.OPEN, 0, 4)
-    q1.step(QeaMonitor.SPAWN, 0, 1)
-    q1.step(QeaMonitor.CLOSE, 0, 4)
-    println(q1.step(QeaMonitor.EXIT, 1))
-    val q2 = new QeaMonitor()
-    println(q2.step(QeaMonitor.EXIT, 1))
-    val q3 = new QeaMonitor()
-    q3.step(QeaMonitor.SPAWN, 0, 1)
-    q3.step(QeaMonitor.OPEN, 1, 4)
-    println(q3.step(QeaMonitor.EXIT, 1))
-    val q8 = new QeaMonitor()
-    q8.step(QeaMonitor.SPAWN, 0, 1)
-    println(q8.step(QeaMonitor.SPAWN, 1, 0))
+    println(new MotivaatingExampleQeaMonitor() step(MotivaatingExampleQeaMonitor.ACCESS, 0, 4))
+    val q1 = new MotivaatingExampleQeaMonitor()
+    q1.step(MotivaatingExampleQeaMonitor.OPEN, 0, 4)
+    q1.step(MotivaatingExampleQeaMonitor.SPAWN, 0, 1)
+    q1.step(MotivaatingExampleQeaMonitor.CLOSE, 0, 4)
+    println(q1.step(MotivaatingExampleQeaMonitor.EXIT, 1))
+    val q2 = new MotivaatingExampleQeaMonitor()
+    println(q2.step(MotivaatingExampleQeaMonitor.EXIT, 1))
+    val q3 = new MotivaatingExampleQeaMonitor()
+    q3.step(MotivaatingExampleQeaMonitor.SPAWN, 0, 1)
+    q3.step(MotivaatingExampleQeaMonitor.OPEN, 1, 4)
+    println(q3.step(MotivaatingExampleQeaMonitor.EXIT, 1))
+    val q8 = new MotivaatingExampleQeaMonitor()
+    q8.step(MotivaatingExampleQeaMonitor.SPAWN, 0, 1)
+    println(q8.step(MotivaatingExampleQeaMonitor.SPAWN, 1, 0))
 
 
     // Should success
-    val q4 = new QeaMonitor()
-    q4.step(QeaMonitor.SPAWN, 0, 1)
-    q4.step(QeaMonitor.OPEN, 1, 1)
-    q4.step(QeaMonitor.ACCESS, 1, 1)
-    q4.step(QeaMonitor.CLOSE, 1, 1)
-    println(q4.step(QeaMonitor.EXIT, 1))
+    val q4 = new MotivaatingExampleQeaMonitor()
+    q4.step(MotivaatingExampleQeaMonitor.SPAWN, 0, 1)
+    q4.step(MotivaatingExampleQeaMonitor.OPEN, 1, 1)
+    q4.step(MotivaatingExampleQeaMonitor.ACCESS, 1, 1)
+    q4.step(MotivaatingExampleQeaMonitor.CLOSE, 1, 1)
+    println(q4.step(MotivaatingExampleQeaMonitor.EXIT, 1))
 
-    val q5 = new QeaMonitor()
-    q5.step(QeaMonitor.SPAWN, 0, 1)
-    q5.step(QeaMonitor.OPEN, 1, 1)
-    q5.step(QeaMonitor.CLOSE, 1, 1)
-    println(q5.step(QeaMonitor.EXIT, 1))
+    val q5 = new MotivaatingExampleQeaMonitor()
+    q5.step(MotivaatingExampleQeaMonitor.SPAWN, 0, 1)
+    q5.step(MotivaatingExampleQeaMonitor.OPEN, 1, 1)
+    q5.step(MotivaatingExampleQeaMonitor.CLOSE, 1, 1)
+    println(q5.step(MotivaatingExampleQeaMonitor.EXIT, 1))
 
-    val q6 = new QeaMonitor()
-    q6.step(QeaMonitor.OPEN, 0, 1372)
-    q6.step(QeaMonitor.SPAWN, 0, 1371)
-    println(q6.step(QeaMonitor.ACCESS, 0, 1372))
+    val q6 = new MotivaatingExampleQeaMonitor()
+    q6.step(MotivaatingExampleQeaMonitor.OPEN, 0, 1372)
+    q6.step(MotivaatingExampleQeaMonitor.SPAWN, 0, 1371)
+    println(q6.step(MotivaatingExampleQeaMonitor.ACCESS, 0, 1372))
 
-    val q7 = new QeaMonitor()
-    q7.step(QeaMonitor.OPEN, 0, 2)
-    q7.step(QeaMonitor.SPAWN, 0, 1)
-    println(q7.step(QeaMonitor.ACCESS, 0, 2))
+    val q7 = new MotivaatingExampleQeaMonitor()
+    q7.step(MotivaatingExampleQeaMonitor.OPEN, 0, 2)
+    q7.step(MotivaatingExampleQeaMonitor.SPAWN, 0, 1)
+    println(q7.step(MotivaatingExampleQeaMonitor.ACCESS, 0, 2))
 
     val max_trace = genEventStream(0, Set.empty).take(300000).toList
 
     var qeaTime: List[Double] = List()
     var cspeTime: List[Double] = List()
 
-    val qeaMonitor = new QeaMonitor()
+    val qeaMonitor = new MotivaatingExampleQeaMonitor()
     val start_qea = System.nanoTime()
     var trace = max_trace
     for (i <- 1 to 30) {
@@ -135,11 +135,11 @@ object MotivatingExample {
 
       for (e <- chunk) {
         val verdict = e match {
-          case Event('Access, pid: Int, fd: Int) => qeaMonitor.step(QeaMonitor.ACCESS, pid, fd)
-          case Event('Open, pid: Int, fd: Int) => qeaMonitor.step(QeaMonitor.OPEN, pid, fd)
-          case Event('Close, pid: Int, fd: Int) => qeaMonitor.step(QeaMonitor.CLOSE, pid, fd)
-          case Event('Spawn, parent: Int, child: Int) => qeaMonitor.step(QeaMonitor.SPAWN, parent, child)
-          case Event('Exit, pid: Int) => qeaMonitor.step(QeaMonitor.EXIT, pid)
+          case Event('Access, pid: Int, fd: Int) => qeaMonitor.step(MotivaatingExampleQeaMonitor.ACCESS, pid, fd)
+          case Event('Open, pid: Int, fd: Int) => qeaMonitor.step(MotivaatingExampleQeaMonitor.OPEN, pid, fd)
+          case Event('Close, pid: Int, fd: Int) => qeaMonitor.step(MotivaatingExampleQeaMonitor.CLOSE, pid, fd)
+          case Event('Spawn, parent: Int, child: Int) => qeaMonitor.step(MotivaatingExampleQeaMonitor.SPAWN, parent, child)
+          case Event('Exit, pid: Int) => qeaMonitor.step(MotivaatingExampleQeaMonitor.EXIT, pid)
         }
         assert(verdict)
       }

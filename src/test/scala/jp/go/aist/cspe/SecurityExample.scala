@@ -41,7 +41,7 @@ object SecurityExample {
     case Event('Release, credential: Int) if credentials(credential) => client(pid, credentials - credential)
   }
 
-  def server = (authServer(Set()) || Set('MakeResAvailable, 'BecomeResAvailable, 'ReleaseRes) || resources(Set(), Set())
+  def server = (authServer(Set()) || Set('MakeResAvailable, 'BecomeResAvailable, 'ReleaseRes) || resources(Set(), Set()))
 
   def system = server || Set('Req, 'Granted, 'Access, 'Release) || client(0, Set())
 

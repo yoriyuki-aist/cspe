@@ -10,7 +10,7 @@ package jp.go.aist.cspe;
 /**
  * Created by yoriyuki on 2016/08/10.
  */
-public interface QeaMonitor {
-    boolean step(int event, int arg);
-    boolean step(int event, int arg, int arg);
+abstract public class QeaMonitor {
+    abstract boolean step(int event, int arg);
+    abstract boolean step(int event, int arg1, int arg2);
 }

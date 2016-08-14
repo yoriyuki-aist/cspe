@@ -29,7 +29,7 @@ import qea.structure.impl.other.Verdict;
 
 import java.util.HashMap;
 
-public class MotivatingExampleQeaMonitor {
+public class MotivatingExampleQeaMonitor extends QeaMonitor {
     public static int ACCESS = 1;
     public static int OPEN = 2;
     public static int CLOSE = 3;

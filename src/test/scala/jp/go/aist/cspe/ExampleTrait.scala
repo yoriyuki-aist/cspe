@@ -11,10 +11,10 @@ package jp.go.aist.cspe
   * Created by yoriyuki on 2016/08/10.
   */
 private[cspe] trait ExampleTrait {
-  private[cspe] abstract def createCSPEModel: Unit => Process
-  private[cspe] abstract def createQEAModel: Unit => QeaMonitor
-  private[cspe] abstract def debugCSPEModel: Unit => Unit
-  private[cspe] abstract def debugQeaModel:  Unit => Unit
-  private[cspe] abstract def genEventStream: Int => List[AbsEvent]
-  private[cspe] abstract def symbolMap: Map[Symbol, Int]
+  private[cspe] def createCSPEModel(): Process
+  private[cspe] def createQeaModel(): QeaMonitor
+  private[cspe] def debugCSPEModel(): Unit
+  private[cspe] def debugQeaModel(): Unit
+  private[cspe] def genEventStream(num : Int) : List[AbsEvent]
+  private[cspe] def symbolMap: Map[Symbol, Int]
 }

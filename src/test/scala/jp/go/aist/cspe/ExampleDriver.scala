@@ -15,18 +15,19 @@ private[cspe] class ExampleDriver(example: ExampleTrait) {
   private[cspe] def run(): Unit ={
     example.debugCSPEModel()
     example.debugQeaModel()
+    val iteration = 300000
 
     val system = example.createCSPEModel()
 
-    val max_trace = example.genEventStream(300000)
+    val max_trace = example.genEventStream(iteration)
 
     var qeaTime: List[Double] = List()
     var cspeTime: List[Double] = List()
 
-    val qeaMonitor = example.createQEAModel()
+    val qeaMonitor = example.createQeaModel()
     val start_qea = System.nanoTime()
     var trace = max_trace
-    for (i <- 1 to 30) {
+    for (i <- 1 to iteration/10000) {
       val chunk = trace.take(10000)
       trace = trace.drop(10000)
 
@@ -48,7 +49,7 @@ private[cspe] class ExampleDriver(example: ExampleTrait) {
     val start = System.nanoTime()
     var cspe_monitors: ProcessSet = new ProcessSet(List(system))
 
-    for (i <- 1 to 30) {
+    for (i <- 1 to iteration/10000) {
       val chunk = trace.take(10000)
       trace = trace.drop(10000)
 
@@ -67,6 +68,5 @@ private[cspe] class ExampleDriver(example: ExampleTrait) {
       println(count + "," + ret._1 + "," + ret._2)
       count = count + 10000
     }
-
   }
 }

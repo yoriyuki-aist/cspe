@@ -10,12 +10,12 @@ package jp.go.aist.cspe
 /**
   * Created by yoriyuki on 2016/08/10.
   */
-object ExampleRnuner {
+object ExampleRuner {
   def main(args: Array[String]): Unit ={
     val driver1 = new ExampleDriver(MotivatingExample)
-    val driver2 = new ExampleDriver(SecurityExample)
+    //val driver2 = new ExampleDriver(SecurityExample)
 
     driver1.run()
-    driver2.run()
+    //driver2.run()
   }
 }

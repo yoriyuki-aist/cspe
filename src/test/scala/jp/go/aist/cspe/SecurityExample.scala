@@ -12,7 +12,7 @@ import sun.security.krb5.Credentials
 /**
   * Created by yoriyuki on 2016/08/08.
   */
-object SecurityExample {
+object SecurityExample extends ExampleTrait {
 
   def authServer(credentials : Set[Int]) : Process = ?? {
     case Event('Req, credential: Int) if ! credentials(credential) =>
@@ -23,14 +23,14 @@ object SecurityExample {
       authServer(credentials - credential) ||| Event('ReleaseRes, credential) ->: SKIP
   }
 
-  def resources(credentials_asked: Set[Int], credentials_granted: Set[Int]) : Process = ?? {
-    case Event('MakeResAvailable, credential: Int) => resources(credentials_asked + credential, credentials_granted)
+  def resource(credentials_asked: Set[Int], credentials_granted: Set[Int]) : Process = ?? {
+    case Event('MakeResAvailable, credential: Int) => resource(credentials_asked + credential, credentials_granted)
     case Event('BecomeResAvailable, credential : Int) if credentials_asked(credential) =>
-      resources(credentials_asked - credential, credentials_granted + credential)
+      resource(credentials_asked - credential, credentials_granted + credential)
     case Event('ReleaseRes, credential: Int) if credentials_granted(credential) =>
-        resources(credentials_asked, credentials_granted - credential)
+        resource(credentials_asked, credentials_granted - credential)
     case Event('Access, credential: Int) if credentials_granted(credential) =>
-        resources(credentials_asked, credentials_granted)
+        resource(credentials_asked, credentials_granted)
   }
 
   def client(pid: Int, credentials: Set[Int]): Process = ?? {
@@ -41,9 +41,10 @@ object SecurityExample {
     case Event('Release, credential: Int) if credentials(credential) => client(pid, credentials - credential)
   }
 
-  def server = (authServer(Set()) || Set('MakeResAvailable, 'BecomeResAvailable, 'ReleaseRes) || resources(Set(), Set()))
+  def server = (authServer(Set()) || Set('MakeResAvailable, 'BecomeResAvailable, 'ReleaseRes) || resource(Set(), Set()))
 
   def system = server || Set('Req, 'Granted, 'Access, 'Release) || client(0, Set())
 
+  def createCSPEModel() : Process = system
 }
 

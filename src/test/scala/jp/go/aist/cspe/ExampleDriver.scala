@@ -15,7 +15,7 @@ private[cspe] class ExampleDriver(example: ExampleTrait) {
   private[cspe] def run(): Unit ={
     example.debugCSPEModel()
     example.debugQeaModel()
-    val iteration = 300000
+    val iteration = 0
 
     val system = example.createCSPEModel()
 
@@ -33,11 +33,8 @@ private[cspe] class ExampleDriver(example: ExampleTrait) {
 
       for (e <- chunk) {
         val verdict = e match {
-          case Event('Access, pid: Int, fd: Int) => qeaMonitor.step(MotivatingExampleQeaMonitor.ACCESS, pid, fd)
-          case Event('Open, pid: Int, fd: Int) => qeaMonitor.step(MotivatingExampleQeaMonitor.OPEN, pid, fd)
-          case Event('Close, pid: Int, fd: Int) => qeaMonitor.step(MotivatingExampleQeaMonitor.CLOSE, pid, fd)
-          case Event('Spawn, parent: Int, child: Int) => qeaMonitor.step(MotivatingExampleQeaMonitor.SPAWN, parent, child)
-          case Event('Exit, pid: Int) => qeaMonitor.step(MotivatingExampleQeaMonitor.EXIT, pid)
+          case Event(s: Symbol, a: Int) => qeaMonitor.step(example.symbolMap(s), a)
+          case Event(s: Symbol, a: Int, b: Int) => qeaMonitor.step(example.symbolMap(s), a, b)
         }
         assert(verdict)
       }

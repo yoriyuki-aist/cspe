@@ -14,9 +14,18 @@ import sun.security.krb5.Credentials
   */
 object SecurityExample extends ExampleTrait {
 
-  def genEventStream(n: Int) = List(Event('Req, 0, 1), Event('MakeResAvailable, 1), Event('BecomeResAvailable, 1),
-    Event('Granted, 1), Event('Access, 0, 1), Event('Spawn, 0, 1), Event('Access, 1, 1),
-    Event('Release, 0, 1), Event('ReleaseRes, 1)).take(n)
+
+
+
+  def genEventStream(n: Int) = {
+    var procNum = 0
+
+    def eventStream(pid, credentials: Set[Int]): Stream[AbsEvent] =
+      TraceFactory.choice{Array{
+          Event()
+        }
+      }
+  }
 
   def authServer(credentials : Set[(Int, Int)]) : Process = ?? {
     case Event('Req, pid: Int, credential: Int) if ! credentials(pid, credential) =>
@@ -47,7 +56,11 @@ object SecurityExample extends ExampleTrait {
 
   def server = (authServer(Set()) || Set('MakeResAvailable, 'BecomeResAvailable, 'ReleaseRes) || resource(Set(), Set()))
 
-  def system = server || Set('Req, 'Granted, 'Access, 'Release) || client(0, Set())
+  def uniqProcess(pidSet : Set[Int]) : Process = ?? {
+    case Event('Spawn, _, child_pid : Int) if ! pidSet(child_pid) => uniqProcess(pidSet + child_pid)
+  }
+
+  def system = server || Set('Req, 'Granted, 'Access, 'Release) || (client(0, Set()) || Set('Spawn) || uniqProcess(Set()))
 
   def createCSPEModel() : Process = system
   def debugCSPEModel() = {
@@ -56,7 +69,9 @@ object SecurityExample extends ExampleTrait {
 
     assert(! monitors.isFailure)
     assert(! (monitors |~ List(Event('Access, 4))))
-    assert(monitors |~  genEventStream(9))
+    assert(monitors |~  List(Event('Req, 0, 1), Event('MakeResAvailable, 1), Event('BecomeResAvailable, 1),
+      Event('Granted, 1), Event('Access, 0, 1), Event('Spawn, 0, 1), Event('Access, 1, 1),
+      Event('Release, 0, 1), Event('ReleaseRes, 1))
   }
 
   def createQeaModel(): QeaMonitor = new StubQeaMonitor()

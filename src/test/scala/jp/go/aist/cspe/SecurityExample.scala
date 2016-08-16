@@ -15,7 +15,7 @@ import sun.security.krb5.Credentials
 object SecurityExample extends ExampleTrait {
 
   def genEventStream(n: Int) = List(Event('Req, 0, 1), Event('MakeResAvailable, 1), Event('BecomeResAvailable, 1),
-    Event('Granted, 1), Event('Access, 0, 1), Event('Spawn, 0, 1), Event('Access, 1, 1), Event('Exit, 1),
+    Event('Granted, 1), Event('Access, 0, 1), Event('Spawn, 0, 1), Event('Access, 1, 1),
     Event('Release, 0, 1), Event('ReleaseRes, 1)).take(n)
 
   def authServer(credentials : Set[(Int, Int)]) : Process = ?? {
@@ -39,12 +39,11 @@ object SecurityExample extends ExampleTrait {
 
   def client(pid: Int, credentials: Set[Int]): Process = ?? {
     case Event('Spawn, `pid`, child_pid: Int) => client(pid, credentials) ||| client(child_pid, credentials)
-    case Event('Exit, `pid`) => SKIP
     case Event('Req, `pid`, credential: Int) =>
       Event('Granted, credential) ->: client(pid, credentials + credential) $
         Event('Release, `pid`, credential) ->: client(pid, credentials)
     case Event('Access, `pid`, credential: Int) if credentials(credential) => client(pid, credentials)
-  }
+  } <+> SKIP
 
   def server = (authServer(Set()) || Set('MakeResAvailable, 'BecomeResAvailable, 'ReleaseRes) || resource(Set(), Set()))
 
@@ -53,10 +52,10 @@ object SecurityExample extends ExampleTrait {
   def createCSPEModel() : Process = system
   def debugCSPEModel() = {
     val monitors = new ProcessSet(List(system))
+    val serverMonitors = new ProcessSet(List(server))
 
     assert(! monitors.isFailure)
     assert(! (monitors |~ List(Event('Access, 4))))
-    assert(monitors |~  List())
     assert(monitors |~  genEventStream(9))
   }
 

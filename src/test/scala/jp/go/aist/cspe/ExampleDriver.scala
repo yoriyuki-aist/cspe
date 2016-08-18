@@ -15,7 +15,7 @@ private[cspe] class ExampleDriver(example: ExampleTrait) {
   private[cspe] def run(): Unit ={
     example.debugCSPEModel()
     example.debugQeaModel()
-    val iteration = 0
+    val iteration = 30000
 
     val system = example.createCSPEModel()
 

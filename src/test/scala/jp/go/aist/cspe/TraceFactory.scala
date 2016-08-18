@@ -15,6 +15,8 @@ import jp.go.aist.cspe._
 object TraceFactory {
   var prng = new scala.util.Random()
 
+  def random(n : Int) = prng.nextInt(n)
+
   def set_seed(seed : Int) =
     prng = new scala.util.Random(seed)
 
@@ -25,7 +27,6 @@ object TraceFactory {
     val i = prng.nextInt(n)
     as(i)
   }
-
 
   def interleving(a : Stream[AbsEvent], b : Stream[AbsEvent]) : Stream[AbsEvent] =
     if (b.isEmpty) {a} else {

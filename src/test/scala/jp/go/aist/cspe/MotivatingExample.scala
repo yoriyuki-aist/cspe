@@ -69,7 +69,11 @@ object MotivatingExample extends ExampleTrait {
 
   def system = process(0, Set.empty) || Set('Spawn, 'Exit) || uniqProcess(Set(0))
 
-  def genEventStream(n : Int) = eventStream(0, Set.empty).take(n).toList
+  def genEventStream(n : Int) = {
+    val ret = eventStream(0, Set.empty).take(n).toList
+    println("Processes: " + max_pid + " Fd: " + max_fd)
+    ret
+  }
 
   def createCSPEModel() : Process = system
 

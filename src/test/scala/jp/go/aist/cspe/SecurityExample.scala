@@ -7,24 +7,56 @@
 
 package jp.go.aist.cspe
 import jp.go.aist.cspe.CSPE._
-import sun.security.krb5.Credentials
+
 
 /**
   * Created by yoriyuki on 2016/08/08.
   */
 object SecurityExample extends ExampleTrait {
 
-
-
-
   def genEventStream(n: Int) = {
-    var procNum = 0
+    var procNum = 1
+    var credentialNum = 1
 
-    def eventStream(pid, credentials: Set[Int]): Stream[AbsEvent] =
-      TraceFactory.choice{Array{
-          Event()
+    def eventStream(pid: Int, credentials: Set[Int], obtained: Set[Int]): Stream[AbsEvent] =
+      TraceFactory.choice (Array(
+        {
+          val child = procNum
+          procNum += 1
+          Event('Spawn, pid, procNum) #::
+            TraceFactory.interleving(eventStream(pid, credentials, obtained), eventStream(child, credentials, Set.empty))
+        }, {
+          val credential = credentialNum
+          credentialNum += 1
+          Event('Req, pid, credential) #::
+            Event('MakeResAvailable, credential) #::
+            Event('BecomeResAvailable, credential) #::
+            Event('Granted, credential) #::
+            eventStream(pid, credentials + credentialNum, obtained + credential)
+        }) ++
+        (if (!credentials.isEmpty) {
+          Array({
+              val credentail = credentials.toIndexedSeq.apply(TraceFactory.random(credentials.size))
+              Event('Access, pid, credentail) #:: eventStream(pid, credentials, obtained)
+            })
         }
-      }
+        else {
+          Array(TraceFactory.skip)
+        }) ++
+        (if (!obtained.isEmpty) {
+          Array({
+            val credentail = credentials.toIndexedSeq.apply(TraceFactory.random(obtained.size))
+            Event('Release, pid, credentail) #::
+              Event('ReleaseRes, credentail) #::
+              eventStream(pid, credentials - credentail, obtained - credentail)
+          })
+        } else {
+          Array(TraceFactory.skip)
+        })
+      )
+    val ret = eventStream(0, Set.empty, Set.empty).take(n).toList
+    println("Processes: " + procNum + " credentials: " + credentialNum)
+    ret
   }
 
   def authServer(credentials : Set[(Int, Int)]) : Process = ?? {
@@ -71,7 +103,7 @@ object SecurityExample extends ExampleTrait {
     assert(! (monitors |~ List(Event('Access, 4))))
     assert(monitors |~  List(Event('Req, 0, 1), Event('MakeResAvailable, 1), Event('BecomeResAvailable, 1),
       Event('Granted, 1), Event('Access, 0, 1), Event('Spawn, 0, 1), Event('Access, 1, 1),
-      Event('Release, 0, 1), Event('ReleaseRes, 1))
+      Event('Release, 0, 1), Event('ReleaseRes, 1)))
   }
 
   def createQeaModel(): QeaMonitor = new StubQeaMonitor()

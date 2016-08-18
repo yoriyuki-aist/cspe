@@ -13,11 +13,11 @@ package jp.go.aist.cspe;
 public class StubQeaMonitor extends QeaMonitor {
     @Override
     boolean step(int event, int arg) {
-        return false;
+        return true;
     }
 
     @Override
     boolean step(int event, int arg1, int arg2) {
-        return false;
+        return true;
     }
 }

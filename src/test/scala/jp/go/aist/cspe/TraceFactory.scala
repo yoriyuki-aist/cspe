@@ -15,7 +15,13 @@ import jp.go.aist.cspe._
 object TraceFactory {
   var prng = new scala.util.Random()
 
-  def random(n : Int) = prng.nextInt(n)
+  def randomChoice[T](s: Set[T]): T = {
+    val n = prng.nextInt(s.size)
+    val it = s.iterator.drop(n)
+    it.next()
+  }
+
+  def random(n: Int) : Int = prng.nextInt(n)
 
   def set_seed(seed : Int) =
     prng = new scala.util.Random(seed)
@@ -28,18 +34,25 @@ object TraceFactory {
     as(i)
   }
 
-  def interleving(a : Stream[AbsEvent], b : Stream[AbsEvent]) : Stream[AbsEvent] =
+  def interleaving(a : Stream[AbsEvent], b : Stream[AbsEvent]) : Stream[AbsEvent] =
     if (b.isEmpty) {a} else {
       if (a.isEmpty) {b} else {
         if (prng.nextBoolean()) {
           val head : AbsEvent = a(0)
           val rest : Stream[AbsEvent] = a.drop(1)
-          head #:: interleving(rest, b)
+          head #:: interleaving(rest, b)
         } else {
           val head = b(0)
           val rest = b.drop(1)
-          head #:: interleving(a, rest)
+          head #:: interleaving(a, rest)
         }
       }
     }
+
+  def removeAtomic(a : Stream[AbsEvent]) : Stream[AbsEvent] = a match {
+    case Stream.Empty => Stream.Empty
+    case Event('Atomic, events: List[AbsEvent]) #:: rest => events ++: removeAtomic(rest)
+    case e #:: rest => e #:: removeAtomic(rest)
+  }
+
 }

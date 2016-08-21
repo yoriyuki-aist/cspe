@@ -15,7 +15,7 @@ object ExampleRunner {
     val driver1 = new ExampleDriver(MotivatingExample)
     val driver2 = new ExampleDriver(SecurityExample)
 
-    driver1.run()
-    driver2.run()
+    driver1.run(false, false)
+    driver2.run(false, false)
   }
 }

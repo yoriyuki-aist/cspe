@@ -16,12 +16,6 @@ import qea.structure.impl.other.Verdict
 
 object MotivatingExample extends ExampleTrait {
 
-  def random[T](s: Set[T]): T = {
-    val n = util.Random.nextInt(s.size)
-    val it = s.iterator.drop(n)
-    it.next()
-  }
-
   var max_pid = 0
   var max_fd = 2
 
@@ -30,8 +24,8 @@ object MotivatingExample extends ExampleTrait {
       (if (openFiles.isEmpty) {
         if (pid == 0) Array.empty else Array(Event('Exit, pid) #:: skip)
       } else {
-        Array(Event('Access, pid, random(openFiles)) #:: eventStream(pid, openFiles), {
-          val fd = random(openFiles)
+        Array(Event('Access, pid, randomChoice(openFiles)) #:: eventStream(pid, openFiles), {
+          val fd = randomChoice(openFiles)
           Event('Close, pid, fd) #:: eventStream(pid, openFiles - fd)
         }
         )
@@ -45,7 +39,7 @@ object MotivatingExample extends ExampleTrait {
             val child_pid = 1 + max_pid
             max_pid += 1
             Event('Spawn, pid, child_pid) #::
-              interleving(eventStream(pid, openFiles), eventStream(child_pid, openFiles))
+              interleaving(eventStream(pid, openFiles), eventStream(child_pid, openFiles))
           }) ++
         (if (pid == 0) Array.empty[Stream[AbsEvent]] else Array(skip))
     }

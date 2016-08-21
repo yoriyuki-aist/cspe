@@ -41,7 +41,7 @@ object CSPE {
 
   def parallel(ps: List[Process], as: Set[Symbol]): Process = {
      if (ps isEmpty) SKIP else {
-        if (ps contains Failure) Failure else new Parallel(ps, as)
+        if (ps contains Failure) Failure else new Parallel(ps filter (_ != SKIP), as)
     }
   }
 

@@ -6,7 +6,10 @@
  */
 
 package jp.go.aist.cspe
+import javax.security.auth.login.CredentialException
+
 import jp.go.aist.cspe.CSPE._
+import qea.util.ArrayUtil
 
 
 /**
@@ -18,52 +21,58 @@ object SecurityExample extends ExampleTrait {
 
   def genEventStream(n: Int) = {
 
-    def eventStream(pid: Int, credentials: Set[Int], used: Set[Int], obtained: Set[Int]): Stream[AbsEvent] =
+    def client(pid: Int, credentials: Set[Int], obtained: Set[Int]) : Stream[AbsEvent] =
       TraceFactory.choice (Array(
-        {
-          val child = procNum
-          procNum += 1
-          Event('Spawn, pid, child) #::
-            TraceFactory.interleaving(eventStream(pid, credentials, obtained, obtained),
-              eventStream(child, credentials, Set.empty, Set.empty)) #:::
-            eventStream(pid, credentials, Set.empty, obtained)
-        }, {
-          val credential = credentialNum
-          credentialNum += 1
-          Event('Atomic, List(Event('Req, pid),
-            Event('MakeResAvailable),
-            Event('BecomeResAvailable, credential),
-            Event('Granted, pid, credential))) #::
-            eventStream(pid, credentials + credential, used, obtained + credential)
-
-        }) ++
-        (if (!credentials.isEmpty) {
-          Array({
-              val credential = TraceFactory.randomChoice(credentials)
-              Event('Access, pid, credential) #:: eventStream(pid, credentials, used, obtained)
-            })
+        eventStream(pid, credentials) #::: client(pid, credentials, obtained),
+      {
+        val credential = credentialNum
+        credentialNum += 1
+        Event('Atomic, List(Event('Req, pid),
+          Event('MakeResAvailable),
+          Event('BecomeResAvailable, credential),
+          Event('Granted, pid, credential))) #:: {
+          client(pid, credentials + credential, obtained + credential)
         }
-        else {
-          Array[Stream[AbsEvent]]()
-        }) ++
-        (if (!obtained.isEmpty && used.isEmpty) {
+      }) ++
+        (if (!obtained.isEmpty) {
           Array({
             val credentail = TraceFactory.randomChoice(obtained)
             Event('Atomic, List(Event('Release, pid, credentail),
               Event('ReleaseRes, credentail))) #::
-              eventStream(pid, credentials - credentail, Set.empty, obtained - credentail)
+              client(pid, credentials - credentail, obtained - credentail)
           })
         } else {
           Array[Stream[AbsEvent]]()
         }) ++
-        (if (! (pid == 0) && used.isEmpty) {
-          Array(Stream.empty)
-        } else {
-          Array[Stream[AbsEvent]]()
-        })
+        (if (pid != 0 && obtained.isEmpty) {
+          Array(Event('Exit, pid) #:: Stream[AbsEvent]())
+        } else Array[Stream[AbsEvent]]())
       )
-    val ret = TraceFactory.removeAtomic(eventStream(0, Set.empty, Set.empty, Set.empty)).take(n).toList
-    println("Processes: " + procNum + " credentials: " + credentialNum)
+
+    def eventStream(pid: Int, credentials: Set[Int]): Stream[AbsEvent] =
+      TraceFactory.choice (Array(
+        {
+          val child = procNum
+          procNum += 1
+          Event('Spawn, pid, child) #:: {
+            TraceFactory.interleaving(eventStream(pid, credentials),
+              client(child, credentials, Set.empty)) #:::
+              eventStream(pid, credentials)
+          }
+        }) ++
+        (if (!credentials.isEmpty) {
+          Array({
+              val credential = TraceFactory.randomChoice(credentials)
+              Event('Access, pid, credential) #:: eventStream(pid, credentials)
+            })
+        }
+        else {
+          Array[Stream[AbsEvent]]()
+        }))
+
+    val ret = TraceFactory.removeAtomic(client(0, Set.empty, Set.empty)).take(n).toList
+    val count = ret.count(_ match {case Event('Spawn, _) => true; case _ => false})
+    println("Processes: " + count)
     ret
   }
 
@@ -87,13 +96,23 @@ object SecurityExample extends ExampleTrait {
         resource(credentials)
   }
 
+  def credentialStore(pid: Int, credentials: Set[Int]): Process = ??{
+    case Event('Granted, _, credential: Int) => credentialStore(pid, credentials + credential)
+    case Event('Release, _, credential: Int) if credentials(credential) => credentialStore(pid, credentials - credential)
+    case Event('Exit, `pid`) if credentials.isEmpty => SKIP
+    case Event('Exit, _) => credentialStore(pid, credentials)
+  }
+
   def client(pid: Int, credentials: Set[Int]): Process = ?? {
-    case Event('Spawn, `pid`, child_pid: Int) => client(pid, credentials) ||| client(child_pid, credentials)
+    case Event('Spawn, `pid`, child_pid: Int) =>
+      client(pid, credentials) |||
+        (client(child_pid, credentials) || Set('Granted, 'Release, 'Exit) || credentialStore(child_pid, Set.empty))
     case Event('Req, `pid`) =>
-      ??{case Event('Granted, `pid`, credential: Int) => client(pid, credentials + credential) $
-        Event('Release, `pid`, credential) ->: client(pid, credentials)}
+      ??{case Event('Granted, `pid`, credential: Int) => client(pid, credentials + credential)}
+    case Event('Release, `pid`, credential: Int) if credentials(credential) => client(pid, credentials - credential)
     case Event('Access, `pid`, credential: Int) if credentials(credential) => client(pid, credentials)
-  } <+> SKIP
+    case Event('Exit, `pid`) => SKIP
+  }
 
   def server = (authServer || Set('MakeResAvailable, 'BecomeResAvailable, 'ReleaseRes) || resource(Set()))
 
@@ -101,7 +120,7 @@ object SecurityExample extends ExampleTrait {
     case Event('Spawn, _, child_pid : Int) if ! pidSet(child_pid) => uniqProcess(pidSet + child_pid)
   }
 
-  def system = server || Set('Req, 'Granted, 'Access, 'Release) || (client(0, Set()) || Set('Spawn) || uniqProcess(Set()))
+  def system = server || Set('Req, 'Granted, 'Access, 'Release) || (client(0, Set()) || Set('Spawn) || uniqProcess(Set(0)))
 
   def createCSPEModel() : Process = system
   def debugCSPEModel() = {
@@ -144,7 +163,13 @@ object SecurityExample extends ExampleTrait {
     //      Event('Release,2, 4),
     //      Event('MakeResAvailable),
     //      Event('ReleaseRes,4)).take(22)) (_ << _))
-    //
+
+    assert(!(monitors /: List(
+        Event('Spawn,0, 4),
+        Event('Spawn,4, 6),
+        Event('Exit,6)).take(3)
+    ) (_ << _) .isFailure)
+
   }
 
 

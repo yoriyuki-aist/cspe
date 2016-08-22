@@ -65,7 +65,8 @@ object MotivatingExample extends ExampleTrait {
 
   def genEventStream(n : Int) = {
     val ret = eventStream(0, Set.empty).take(n).toList
-    println("Processes: " + max_pid + " Fd: " + max_fd)
+    val count = ret.count(_ match {case Event('Spawn, _) => true; case _ => false})
+    println("Processes: " + count)
     ret
   }
 

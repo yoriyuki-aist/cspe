@@ -54,5 +54,4 @@ object TraceFactory {
     case Event('Atomic, events: List[AbsEvent]) #:: rest => events ++: removeAtomic(rest)
     case e #:: rest => e #:: removeAtomic(rest)
   }
-
 }

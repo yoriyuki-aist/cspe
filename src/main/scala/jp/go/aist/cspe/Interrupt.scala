@@ -30,6 +30,8 @@ private[cspe] class Interrupt(p0 : Process, as0 : Set[Symbol], q0 : Process) ext
     p.canTerminate
   }
 
+  override def isTerminated = p.isTerminated
+
   override def toString = p.toString + "|" + as.toString + ">" + q.toString
 
   def canEqual(other: Any): Boolean = other.isInstanceOf[Interrupt]

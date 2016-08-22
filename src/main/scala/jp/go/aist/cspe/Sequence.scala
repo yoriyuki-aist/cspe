@@ -25,9 +25,9 @@ private[cspe] class Sequence(ps0 : List[Process]) extends Process {
     case p :: ps =>
       val next = p << e
       val nextp0 = next.processes map ((p: Process) => {
-        if (p == SKIP) {
+        if (p.isTerminated) {
           if (ps.size == 1) ps.last else sequence(ps)
-        } else if (p == Failure) { Failure
+        } else if (p.isFailure) { Failure
         } else {
           sequence(p :: ps)
         }
@@ -37,6 +37,8 @@ private[cspe] class Sequence(ps0 : List[Process]) extends Process {
   }
 
   override def canTerminate = ps.forall(_.canTerminate)
+
+  override def isTerminated = ps.forall(_.isTerminated)
 
   override def toString = "$" + ps.toString()
 

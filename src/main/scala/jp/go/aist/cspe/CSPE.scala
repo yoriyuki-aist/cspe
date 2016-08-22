@@ -41,7 +41,7 @@ object CSPE {
 
   def parallel(ps: List[Process], as: Set[Symbol]): Process = {
      if (ps isEmpty) SKIP else {
-        if (ps contains Failure) Failure else new Parallel(ps filter (_ != SKIP), as)
+        if (ps contains Failure) Failure else new Parallel(ps filter (! _.isTerminated), as)
     }
   }
 
@@ -70,7 +70,6 @@ object CSPE {
   def interrupt(p: Process, es: Set[Symbol], q: Process): Process =
     new Interrupt(p, es, q)
 
-  
   def processSet(ps : List[Process]) : ProcessSet = new ProcessSet(ps)
 
 }

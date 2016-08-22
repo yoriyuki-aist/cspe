@@ -13,6 +13,7 @@ object SKIP extends Process {
   override def acceptPrim(e : AbsEvent): ProcessSet = processSet(List.empty)
 
   override def canTerminate = true
+  override def isTerminated = true
 
   override def toString = "SKIP"
   override def equals(other: Any) = other match {

@@ -13,7 +13,9 @@ abstract class Process {
 
   def acceptPrim(e: AbsEvent): ProcessSet
 
-  def canTerminate : Boolean
+  def canTerminate = isTerminated
+
+  def isTerminated = false
 
   // used for creation
   def ->:(e: AbsEvent): Process = new Prefix(e, this)

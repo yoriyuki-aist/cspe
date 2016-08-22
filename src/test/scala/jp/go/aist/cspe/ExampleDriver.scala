@@ -16,8 +16,8 @@ private[cspe] def run(do_qea: Boolean, do_cspe: Boolean): Unit ={
     example.debugCSPEModel()
     example.debugQeaModel()
 
-    val iteration = 300
-    val chunkSize = 100
+    val iteration = 30000
+    val chunkSize = 10000
 
     val system = example.createCSPEModel()
 
@@ -61,7 +61,7 @@ private[cspe] def run(do_qea: Boolean, do_cspe: Boolean): Unit ={
         for (e <- chunk) {
           cspe_monitors = cspe_monitors << e
           //if (cspe_monitors.isFailure) {println(e)}
-          println(e)
+//          println(e)
           assert(!cspe_monitors.isFailure)
         }
         val rap_cspe = System.nanoTime()

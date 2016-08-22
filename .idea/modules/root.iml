@@ -22,7 +22,16 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="SBT: org.scala-lang:scala-library:2.11.8:jar" level="project" />
-    <orderEntry type="library" scope="TEST" name="SBT: org.apache.commons:commons-collections4:4.0:jar" level="project" />
+    <orderEntry type="module-library">
+      <library name="SBT: unmanaged-jars">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../../lib/qea-1.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
     <orderEntry type="library" scope="TEST" name="SBT: com.github.selig:qea:1.0:jar" level="project" />
+    <orderEntry type="library" scope="TEST" name="SBT: org.apache.commons:commons-collections4:4.0:jar" level="project" />
   </component>
 </module>

@@ -16,8 +16,8 @@ private[cspe] def run(do_qea: Boolean, do_cspe: Boolean): Unit ={
     example.debugCSPEModel()
     example.debugQeaModel()
 
-    val iteration = 300
-    val chunkSize = 100
+    val iteration = 30000
+    val chunkSize = 1000
 
     val system = example.createCSPEModel()
 
@@ -60,15 +60,15 @@ private[cspe] def run(do_qea: Boolean, do_cspe: Boolean): Unit ={
 
         for (e <- chunk) {
           cspe_monitors = cspe_monitors << e
-          //if (cspe_monitors.isFailure) {println(e)}
-          println(e)
+     //     if (cspe_monitors.isFailure) {println(e)//println(e)
+      //    println(cspe_monitors.processes.length)
           assert(!cspe_monitors.isFailure)
         }
         val rap_cspe = System.nanoTime()
         cspeTime = cspeTime :+ (rap_cspe - start) / scala.math.pow(10, 9)
       }
     }
-
+    println(cspeTime.length)
 
     println("," + Calendar.getInstance().getTime() + ",")
     if (do_qea && do_cspe) {

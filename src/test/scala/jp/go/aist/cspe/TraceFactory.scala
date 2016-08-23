@@ -49,6 +49,14 @@ object TraceFactory {
       }
     }
 
+  def interleaving(as: List[Stream[AbsEvent]]) : Stream[AbsEvent] = {
+    val n = prng.nextInt(as.length)
+    val head = as(n)(0)
+    val as1 = as updated (n, as(n).drop(1))
+    head #:: interleaving(as1)
+  }
+
+
   def removeAtomic(a : Stream[AbsEvent]) : Stream[AbsEvent] = a match {
     case Stream.Empty => Stream.Empty
     case Event('Atomic, events: List[AbsEvent]) #:: rest => events ++: removeAtomic(rest)
